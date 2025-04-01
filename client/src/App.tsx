@@ -1,0 +1,152 @@
+import { Switch, Route, useLocation } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import NotFound from "@/pages/not-found";
+import Dashboard from "@/pages/Dashboard";
+import Activity from "@/pages/Activity";
+import Workouts from "@/pages/Workouts";
+import Challenges from "@/pages/Challenges";
+import Community from "@/pages/Community";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import { AppLayout } from "@/layouts/AppLayout";
+import { useEffect, useState } from "react";
+import { apiRequest } from "./lib/queryClient";
+
+// Define authenticated routes that require login
+const authenticatedRoutes = [
+  "/dashboard",
+  "/activity",
+  "/workouts",
+  "/challenges",
+  "/community",
+  "/profile",
+  "/settings"
+];
+
+function Router() {
+  const [location, setLocation] = useLocation();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await apiRequest("GET", "/api/auth/me");
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+        
+        // Redirect to login if user tries to access protected route
+        if (authenticatedRoutes.some(route => location.startsWith(route))) {
+          setLocation("/login");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, [location, setLocation]);
+
+  // Handle redirects for authenticated users
+  useEffect(() => {
+    if (isAuthenticated && (location === "/login" || location === "/register" || location === "/")) {
+      setLocation("/dashboard");
+    }
+  }, [isAuthenticated, location, setLocation]);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  return (
+    <Switch>
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      
+      {/* Protected routes */}
+      <Route path="/dashboard">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Dashboard />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/activity">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Activity />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/workouts">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Workouts />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/challenges">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Challenges />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/community">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Community />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/profile">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Profile />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/settings">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Settings />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Dashboard />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      {/* Fallback to 404 */}
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router />
+      <Toaster />
+    </QueryClientProvider>
+  );
+}
+
+export default App;
