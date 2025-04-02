@@ -14,13 +14,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { CalendarIcon, Dumbbell, Timer, Route, Flame, CheckCircle } from "lucide-react";
 
 // Extend the schema with validation requirements
-const workoutSchema = insertWorkoutSchema.extend({
+const workoutSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
   type: z.string().min(1, { message: "Please select a workout type" }),
   duration: z.coerce.number().min(1, { message: "Duration must be at least 1 minute" }),
   distance: z.coerce.number().optional(),
   caloriesBurned: z.coerce.number().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  description: z.string().optional(), // Map from notes to description
+  userId: z.number().optional(), // This will be set on the server
+  completed: z.boolean().optional().default(true),
 });
 
 type WorkoutFormValues = z.infer<typeof workoutSchema>;
@@ -45,7 +48,10 @@ const NewWorkout = () => {
   // Create mutation for submitting workout
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: WorkoutFormValues) => {
-      return apiRequest("POST", "/api/workouts", data);
+      console.log("Sending to API:", data);
+      const response = await apiRequest("POST", "/api/workouts", data);
+      console.log("API response:", response);
+      return response;
     },
     onSuccess: () => {
       toast({
@@ -69,14 +75,18 @@ const NewWorkout = () => {
   // Form submission handler
   const onSubmit = (data: WorkoutFormValues) => {
     console.log("Submitting workout:", data);
-    // Clean up the data - convert empty strings to undefined
+    
+    // Clean up the data and prepare it for submission
     const workoutData = {
-      ...data,
-      notes: data.notes || undefined,
+      title: data.title,
+      type: data.type,
+      duration: data.duration,
+      description: data.notes || undefined, // Map notes to description field expected by the backend
       distance: data.distance || undefined,
       caloriesBurned: data.caloriesBurned || undefined,
-      description: data.notes, // Map notes to description field expected by the backend
+      completed: true  // Default to completed
     };
+    
     console.log("Submitting workout data:", workoutData);
     // Create a new workout record - the server will add the userId from the authenticated session
     mutate(workoutData);
