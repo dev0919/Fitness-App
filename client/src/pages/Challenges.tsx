@@ -89,7 +89,15 @@ const Challenges = () => {
     );
   }
 
-  const displayChallenges = filter === "joined" ? (joinedChallenges || []) : (challenges || []);
+  // Format joined challenges to match the expected format
+  const formattedJoinedChallenges = Array.isArray(joinedChallenges) 
+    ? joinedChallenges.map((item: any) => ({
+        ...item.challenge,
+        participant: item.participant
+      })) 
+    : [];
+  
+  const displayChallenges = filter === "joined" ? formattedJoinedChallenges : (challenges || []);
 
   return (
     <div className="px-4 py-6 md:px-8">
@@ -97,6 +105,12 @@ const Challenges = () => {
         <div>
           <h2 className="text-2xl font-bold text-[#212121]">Challenges</h2>
           <p className="text-[#616161] mt-1">Join fitness challenges and compete with friends</p>
+        </div>
+        <div className="mt-4 md:mt-0">
+          <Link href="/challenges/new" className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]">
+            <i className="fas fa-plus mr-2"></i>
+            Create Challenge
+          </Link>
         </div>
       </div>
       
@@ -145,7 +159,7 @@ const Challenges = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {displayChallenges.length > 0 ? (
+          {Array.isArray(displayChallenges) && displayChallenges.length > 0 ? (
             displayChallenges.map((challenge: any) => {
               const isJoined = filter === "joined";
               const hasStarted = new Date(challenge.startDate) <= new Date();

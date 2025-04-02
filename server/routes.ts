@@ -355,6 +355,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Server error' });
     }
   });
+  
+  apiRouter.post('/challenges', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const challengeData = { ...req.body, creatorId: userId };
+      
+      const challenge = await storage.createChallenge(challengeData);
+      res.status(201).json(challenge);
+    } catch (error) {
+      console.error('Error creating challenge:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
 
   apiRouter.get('/challenges/:id', async (req, res) => {
     try {

@@ -8,6 +8,7 @@ import Workouts from "@/pages/Workouts";
 import WorkoutDetail from "@/pages/WorkoutDetail";
 import NewWorkout from "@/pages/NewWorkout";
 import Challenges from "@/pages/Challenges";
+import NewChallenge from "@/pages/NewChallenge";
 import ChallengeDetail from "@/pages/ChallengeDetail";
 import Community from "@/pages/Community";
 import Profile from "@/pages/Profile";
@@ -102,6 +103,14 @@ function Router() {
         {isAuthenticated ? (
           <AppLayout>
             <Workouts />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/challenges/new">
+        {isAuthenticated ? (
+          <AppLayout>
+            <NewChallenge />
           </AppLayout>
         ) : <Login />}
       </Route>
