@@ -319,7 +319,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Check if activity already exists for this date
-      const existingActivity = await storage.getActivityByUserAndDate(userId, new Date(activityData.date));
+      // Ensure date exists in activityData and create Date object
+      const activityDate = activityData.date ? new Date(activityData.date) : new Date();
+      const existingActivity = await storage.getActivityByUserAndDate(userId, activityDate);
       if (existingActivity) {
         const updatedActivity = await storage.updateActivity(existingActivity.id, activityData);
         return res.json(updatedActivity);
@@ -431,6 +433,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(activities);
     } catch (error) {
       res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  // POST new social activity
+  apiRouter.post('/social/activities', isAuthenticated, async (req, res) => {
+    try {
+      // Get the current user from session
+      const userId = (req.user as any).id;
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const { type, content } = req.body;
+      
+      if (!type || !content) {
+        return res.status(400).json({ error: "Type and content are required" });
+      }
+      
+      const newActivity = await storage.createSocialActivity({
+        userId,
+        type,
+        content
+      });
+      
+      res.status(201).json(newActivity);
+    } catch (error) {
+      console.error("Error creating social activity:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid input data', errors: error.errors });
+      }
+      res.status(500).json({ error: "Could not create social activity" });
     }
   });
 

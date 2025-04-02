@@ -8,19 +8,31 @@ const Activity = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("week"); // "week", "month", "year"
   
   // Fetch activity data
-  const { data: activitiesData = [], isLoading } = useQuery({
+  const { data: activitiesData = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/activities'],
+    // Set initial data to empty array to prevent TypeScript errors
+    initialData: [],
   });
   
   // Create activity mutation
   const createActivity = useMutation({
     mutationFn: async (activityData: any) => {
-      // Make sure date is properly formatted
-      const formattedData = {
-        ...activityData,
-        date: new Date(activityData.date).toISOString()
-      };
-      return await apiRequest("POST", "/api/activities", formattedData);
+      try {
+        // Make sure all fields are properly converted to numbers and date is formatted
+        const formattedData = {
+          date: new Date(activityData.date).toISOString(),
+          steps: Number(activityData.steps),
+          caloriesBurned: Number(activityData.caloriesBurned),
+          activeMinutes: Number(activityData.activeMinutes),
+          workoutsCompleted: Number(activityData.workoutsCompleted)
+        };
+        
+        console.log("Sending activity data:", formattedData);
+        return await apiRequest("POST", "/api/activities", formattedData);
+      } catch (error) {
+        console.error("Error in mutation function:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
