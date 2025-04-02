@@ -69,8 +69,17 @@ const NewWorkout = () => {
   // Form submission handler
   const onSubmit = (data: WorkoutFormValues) => {
     console.log("Submitting workout:", data);
-    // Create a new workout record
-    mutate(data);
+    // Clean up the data - convert empty strings to undefined
+    const workoutData = {
+      ...data,
+      notes: data.notes || undefined,
+      distance: data.distance || undefined,
+      caloriesBurned: data.caloriesBurned || undefined,
+      description: data.notes, // Map notes to description field expected by the backend
+    };
+    console.log("Submitting workout data:", workoutData);
+    // Create a new workout record - the server will add the userId from the authenticated session
+    mutate(workoutData);
   };
 
   return (
