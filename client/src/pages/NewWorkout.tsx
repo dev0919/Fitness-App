@@ -68,6 +68,7 @@ const NewWorkout = () => {
 
   // Form submission handler
   const onSubmit = (data: WorkoutFormValues) => {
+    console.log("Submitting workout:", data);
     // Create a new workout record
     mutate(data);
   };

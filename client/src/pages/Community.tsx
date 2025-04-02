@@ -36,6 +36,8 @@ const Community = () => {
   const [activeTab, setActiveTab] = useState<'feed' | 'friends'>('feed');
   const [expandedCommentActivity, setExpandedCommentActivity] = useState<number | null>(null);
   const [commentText, setCommentText] = useState("");
+  const [newPostText, setNewPostText] = useState("");
+  const [showNewPostForm, setShowNewPostForm] = useState(false);
   
   // Fetch friend activities
   const { data: activities, isLoading } = useQuery({
@@ -79,6 +81,32 @@ const Community = () => {
       toast({
         title: "Error",
         description: "Could not post comment",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Create post mutation
+  const createPost = useMutation({
+    mutationFn: async (content: string) => {
+      return await apiRequest("POST", "/api/social/activities", {
+        type: "post",
+        content
+      });
+    },
+    onSuccess: () => {
+      setNewPostText("");
+      setShowNewPostForm(false);
+      toast({
+        title: "Success!",
+        description: "Your post has been published",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/social/activities/friends"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not create post",
         variant: "destructive"
       });
     }
@@ -166,6 +194,44 @@ const Community = () => {
       {/* Activity Feed Tab */}
       {activeTab === 'feed' && (
         <div className="space-y-4">
+          {/* New Post Form */}
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="p-4">
+              {showNewPostForm ? (
+                <div>
+                  <textarea
+                    value={newPostText}
+                    onChange={(e) => setNewPostText(e.target.value)}
+                    placeholder="What's on your mind? Share your fitness achievements, goals, or tips..."
+                    className="w-full p-3 border border-[#E0E0E0] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4CAF50] min-h-[120px]"
+                  />
+                  <div className="flex justify-end mt-3 space-x-2">
+                    <button
+                      onClick={() => setShowNewPostForm(false)}
+                      className="px-4 py-2 border border-[#E0E0E0] rounded-md text-[#616161]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => createPost.mutate(newPostText)}
+                      disabled={createPost.isPending || !newPostText.trim()}
+                      className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#388E3C] disabled:opacity-50"
+                    >
+                      {createPost.isPending ? 'Posting...' : 'Post'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  onClick={() => setShowNewPostForm(true)}
+                  className="flex items-center p-2 border border-[#E0E0E0] rounded-md cursor-pointer hover:bg-[#F5F5F5]"
+                >
+                  <span className="text-[#9E9E9E] pl-2">What's on your mind?</span>
+                </div>
+              )}
+            </div>
+          </div>
+          
           {enhancedActivities.length > 0 ? (
             enhancedActivities.map(({ activity, user, interactions }) => (
               <div key={activity.id} className="bg-white shadow rounded-lg overflow-hidden">
@@ -173,13 +239,11 @@ const Community = () => {
                   <div className="flex">
                     <div className="flex-shrink-0">
                       <Link href={`/profile/${user.id}`}>
-                        <a>
-                          <img 
-                            className="h-10 w-10 rounded-full object-cover" 
-                            src={user.avatar} 
-                            alt={user.name}
-                          />
-                        </a>
+                        <img 
+                          className="h-10 w-10 rounded-full object-cover cursor-pointer" 
+                          src={user.avatar} 
+                          alt={user.name}
+                        />
                       </Link>
                     </div>
                     <div className="ml-3 flex-1">
@@ -282,7 +346,7 @@ const Community = () => {
                     </div>
                   </div>
                   <Link href={`/profile/${friend.id}`}>
-                    <a className="text-sm text-[#4CAF50] hover:text-[#388E3C]">View Profile</a>
+                    <span className="text-sm text-[#4CAF50] hover:text-[#388E3C] cursor-pointer">View Profile</span>
                   </Link>
                 </div>
               </li>

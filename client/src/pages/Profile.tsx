@@ -2,25 +2,32 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useParams } from "wouter";
 
 const Profile = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'overview' | 'workouts' | 'achievements'>('overview');
+  const params = useParams();
+  const userId = params.id ? parseInt(params.id) : undefined;
+  
+  // Determine if viewing own profile or someone else's
+  const isOwnProfile = !userId;
   
   // Fetch user data
   const { data: user, isLoading: isUserLoading } = useQuery({
-    queryKey: ['/api/auth/me'],
+    queryKey: isOwnProfile ? ['/api/auth/me'] : [`/api/users/${userId}`],
   });
   
   // Fetch user workouts
   const { data: workouts, isLoading: isWorkoutsLoading } = useQuery({
-    queryKey: ['/api/workouts'],
+    queryKey: isOwnProfile ? ['/api/workouts'] : [`/api/users/${userId}/workouts`],
+    enabled: !!user,
   });
   
   // Fetch user activities
   const { data: activities, isLoading: isActivitiesLoading } = useQuery({
-    queryKey: ['/api/activities'],
+    queryKey: isOwnProfile ? ['/api/activities'] : [`/api/users/${userId}/activities`],
+    enabled: !!user,
   });
   
   if (isUserLoading) {
@@ -67,11 +74,13 @@ const Profile = () => {
               </div>
             </div>
             <div className="mt-5 flex justify-center sm:mt-0">
-              <Link href="/edit-profile">
-                <a className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]">
-                  Edit Profile
-                </a>
-              </Link>
+              {isOwnProfile && (
+                <Link href="/edit-profile">
+                  <span className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50] cursor-pointer">
+                    Edit Profile
+                  </span>
+                </Link>
+              )}
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import Activity from "@/pages/Activity";
 import Workouts from "@/pages/Workouts";
 import NewWorkout from "@/pages/NewWorkout";
 import Challenges from "@/pages/Challenges";
+import ChallengeDetail from "@/pages/ChallengeDetail";
 import Community from "@/pages/Community";
 import Profile from "@/pages/Profile";
 import EditProfile from "@/pages/EditProfile";
@@ -106,6 +107,14 @@ function Router() {
         ) : <Login />}
       </Route>
       
+      <Route path="/challenges/:id">
+        {isAuthenticated ? (
+          <AppLayout>
+            <ChallengeDetail />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
       <Route path="/challenges">
         {isAuthenticated ? (
           <AppLayout>
@@ -118,6 +127,14 @@ function Router() {
         {isAuthenticated ? (
           <AppLayout>
             <Community />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/profile/:id">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Profile />
           </AppLayout>
         ) : <Login />}
       </Route>

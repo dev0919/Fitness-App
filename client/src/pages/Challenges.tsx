@@ -3,6 +3,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Challenge } from "@shared/schema";
 import { useState } from "react";
+import { Link } from "wouter";
 
 const Challenges = () => {
   const { toast } = useToast();
@@ -205,20 +206,31 @@ const Challenges = () => {
                             style={{ width: `${challenge.participant.progress}%` }}
                           ></div>
                         </div>
-                        <button 
-                          className="w-full flex items-center justify-center px-4 py-2 border border-[#4CAF50] rounded-md shadow-sm text-sm font-medium text-[#4CAF50] bg-white hover:bg-[#F5F5F5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]"
-                        >
-                          View Details
-                        </button>
+                        <Link href={`/challenges/${challenge.id}`}>
+                          <button 
+                            className="w-full flex items-center justify-center px-4 py-2 border border-[#4CAF50] rounded-md shadow-sm text-sm font-medium text-[#4CAF50] bg-white hover:bg-[#F5F5F5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]"
+                          >
+                            View Details
+                          </button>
+                        </Link>
                       </div>
                     ) : (
-                      <button 
-                        onClick={() => joinChallenge.mutate(challenge.id)}
-                        disabled={joinChallenge.isPending}
-                        className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50] disabled:opacity-75"
-                      >
-                        {joinChallenge.isPending ? 'Joining...' : 'Join Challenge'}
-                      </button>
+                      <div className="space-y-2">
+                        <button 
+                          onClick={() => joinChallenge.mutate(challenge.id)}
+                          disabled={joinChallenge.isPending}
+                          className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50] disabled:opacity-75"
+                        >
+                          {joinChallenge.isPending ? 'Joining...' : 'Join Challenge'}
+                        </button>
+                        <Link href={`/challenges/${challenge.id}`}>
+                          <button 
+                            className="w-full flex items-center justify-center px-4 py-2 border border-[#4CAF50] rounded-md shadow-sm text-sm font-medium text-[#4CAF50] bg-white hover:bg-[#F5F5F5] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]"
+                          >
+                            View Details
+                          </button>
+                        </Link>
+                      </div>
                     )}
                   </div>
                 </div>
