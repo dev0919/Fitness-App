@@ -3,6 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+// Define User interface for the component
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName?: string;
+  profileImage?: string;
+}
+
 type NavItemProps = {
   href: string;
   icon: string;
@@ -27,7 +37,7 @@ export const Sidebar = () => {
   const [location] = useLocation();
   const { toast } = useToast();
   
-  const { data: user } = useQuery({
+  const { data: user } = useQuery<User>({
     queryKey: ['/api/auth/me'],
     retry: false,
     throwOnError: false,
@@ -59,12 +69,6 @@ export const Sidebar = () => {
               icon="fa-home"
               label="Dashboard"
               isActive={location === "/dashboard"}
-            />
-            <NavItem
-              href="/activity"
-              icon="fa-chart-line"
-              label="Activity"
-              isActive={location === "/activity"}
             />
             <NavItem
               href="/workouts"

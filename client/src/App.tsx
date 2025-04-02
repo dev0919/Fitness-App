@@ -4,7 +4,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
-import Activity from "@/pages/Activity";
 import Workouts from "@/pages/Workouts";
 import NewWorkout from "@/pages/NewWorkout";
 import Challenges from "@/pages/Challenges";
@@ -22,7 +21,6 @@ import { apiRequest } from "./lib/queryClient";
 // Define authenticated routes that require login
 const authenticatedRoutes = [
   "/dashboard",
-  "/activity",
   "/workouts",
   "/workouts/new",
   "/challenges",
@@ -79,14 +77,6 @@ function Router() {
         {isAuthenticated ? (
           <AppLayout>
             <Dashboard />
-          </AppLayout>
-        ) : <Login />}
-      </Route>
-      
-      <Route path="/activity">
-        {isAuthenticated ? (
-          <AppLayout>
-            <Activity />
           </AppLayout>
         ) : <Login />}
       </Route>

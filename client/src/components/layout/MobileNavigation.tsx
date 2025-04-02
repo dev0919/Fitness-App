@@ -12,12 +12,6 @@ export const MobileNavigation = () => {
             <span className="text-xs mt-1">Home</span>
           </a>
         </Link>
-        <Link href="/activity">
-          <a className={`py-3 px-4 ${location === "/activity" ? "text-[#4CAF50] border-t-2 border-[#4CAF50]" : "text-[#9E9E9E] hover:text-[#4CAF50]"} flex flex-col items-center`}>
-            <i className="fas fa-chart-line text-lg"></i>
-            <span className="text-xs mt-1">Activity</span>
-          </a>
-        </Link>
         <Link href="/workouts">
           <a className={`py-3 px-4 ${location === "/workouts" ? "text-[#4CAF50] border-t-2 border-[#4CAF50]" : "text-[#9E9E9E] hover:text-[#4CAF50]"} flex flex-col items-center`}>
             <i className="fas fa-dumbbell text-lg"></i>
