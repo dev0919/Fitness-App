@@ -6,9 +6,11 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Activity from "@/pages/Activity";
 import Workouts from "@/pages/Workouts";
+import NewWorkout from "@/pages/NewWorkout";
 import Challenges from "@/pages/Challenges";
 import Community from "@/pages/Community";
 import Profile from "@/pages/Profile";
+import EditProfile from "@/pages/EditProfile";
 import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -21,9 +23,11 @@ const authenticatedRoutes = [
   "/dashboard",
   "/activity",
   "/workouts",
+  "/workouts/new",
   "/challenges",
   "/community",
   "/profile",
+  "/edit-profile",
   "/settings"
 ];
 
@@ -86,6 +90,14 @@ function Router() {
         ) : <Login />}
       </Route>
       
+      <Route path="/workouts/new">
+        {isAuthenticated ? (
+          <AppLayout>
+            <NewWorkout />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
       <Route path="/workouts">
         {isAuthenticated ? (
           <AppLayout>
@@ -114,6 +126,14 @@ function Router() {
         {isAuthenticated ? (
           <AppLayout>
             <Profile />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/edit-profile">
+        {isAuthenticated ? (
+          <AppLayout>
+            <EditProfile />
           </AppLayout>
         ) : <Login />}
       </Route>

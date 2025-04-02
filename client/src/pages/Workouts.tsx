@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { PlusCircle } from "lucide-react";
 
 const Workouts = () => {
   // Fetch workouts
@@ -65,11 +66,9 @@ const Workouts = () => {
           <p className="text-[#616161] mt-1">Track and manage your workout sessions</p>
         </div>
         <div className="mt-4 md:mt-0">
-          <Link href="/workouts/new">
-            <a className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]">
-              <i className="fas fa-plus mr-2"></i>
-              New Workout
-            </a>
+          <Link href="/workouts/new" className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]">
+            <PlusCircle className="w-4 h-4 mr-2" />
+            New Workout
           </Link>
         </div>
       </div>
@@ -112,40 +111,38 @@ const Workouts = () => {
           <ul className="divide-y divide-[#E0E0E0]">
             {workouts.map((workout: any) => (
               <li key={workout.id}>
-                <Link href={`/workouts/${workout.id}`}>
-                  <a className="block hover:bg-[#F5F5F5]">
-                    <div className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className={`flex-shrink-0 h-12 w-12 rounded-full bg-[#81C784] flex items-center justify-center`}>
-                          <i className={`fas ${getWorkoutIcon(workout.type)} text-[#4CAF50] text-xl`}></i>
-                        </div>
-                        <div className="ml-4 flex-grow">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="text-lg font-medium text-[#212121]">{workout.title}</h3>
-                              <div className="flex items-center text-sm text-[#616161] mt-1">
-                                <span className="mr-3">{formatWorkoutDate(workout.createdAt)}</span>
+                <Link href={`/workouts/${workout.id}`} className="block hover:bg-[#F5F5F5]">
+                  <div className="px-6 py-4">
+                    <div className="flex items-center">
+                      <div className={`flex-shrink-0 h-12 w-12 rounded-full bg-[#81C784] flex items-center justify-center`}>
+                        <i className={`fas ${getWorkoutIcon(workout.type)} text-[#4CAF50] text-xl`}></i>
+                      </div>
+                      <div className="ml-4 flex-grow">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-medium text-[#212121]">{workout.title}</h3>
+                            <div className="flex items-center text-sm text-[#616161] mt-1">
+                              <span className="mr-3">{formatWorkoutDate(workout.createdAt)}</span>
+                              <span className="mr-3">
+                                <i className="far fa-clock mr-1"></i> {formatDuration(workout.duration)}
+                              </span>
+                              {workout.distance && (
                                 <span className="mr-3">
-                                  <i className="far fa-clock mr-1"></i> {formatDuration(workout.duration)}
+                                  <i className="fas fa-route mr-1"></i> {(workout.distance / 1000).toFixed(1)} km
                                 </span>
-                                {workout.distance && (
-                                  <span className="mr-3">
-                                    <i className="fas fa-route mr-1"></i> {(workout.distance / 1000).toFixed(1)} km
-                                  </span>
-                                )}
-                                {workout.caloriesBurned && (
-                                  <span>
-                                    <i className="fas fa-fire mr-1"></i> {workout.caloriesBurned} cal
-                                  </span>
-                                )}
-                              </div>
+                              )}
+                              {workout.caloriesBurned && (
+                                <span>
+                                  <i className="fas fa-fire mr-1"></i> {workout.caloriesBurned} cal
+                                </span>
+                              )}
                             </div>
-                            <i className="fas fa-chevron-right text-[#9E9E9E]"></i>
                           </div>
+                          <i className="fas fa-chevron-right text-[#9E9E9E]"></i>
                         </div>
                       </div>
                     </div>
-                  </a>
+                  </div>
                 </Link>
               </li>
             ))}
@@ -157,10 +154,8 @@ const Workouts = () => {
             </div>
             <h3 className="text-lg font-medium text-[#212121]">No workouts yet</h3>
             <p className="text-[#616161] mt-1">Start tracking your fitness activities</p>
-            <Link href="/workouts/new">
-              <a className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C]">
-                <i className="fas fa-plus mr-2"></i> Add First Workout
-              </a>
+            <Link href="/workouts/new" className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C]">
+              <PlusCircle className="w-4 h-4 mr-2" /> Add First Workout
             </Link>
           </div>
         )}

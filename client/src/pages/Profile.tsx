@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Link } from "wouter";
 
 const Profile = () => {
   const { toast } = useToast();
@@ -66,9 +67,11 @@ const Profile = () => {
               </div>
             </div>
             <div className="mt-5 flex justify-center sm:mt-0">
-              <button className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]">
-                Edit Profile
-              </button>
+              <Link href="/edit-profile">
+                <a className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]">
+                  Edit Profile
+                </a>
+              </Link>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { ActivityChart } from "@/components/dashboard/ActivityChart";
 import { RecentWorkouts } from "@/components/dashboard/RecentWorkouts";
 import { FriendActivity } from "@/components/dashboard/FriendActivity";
 import { UpcomingChallenges } from "@/components/dashboard/UpcomingChallenges";
+import { PlusCircle } from "lucide-react";
 
 const Dashboard = () => {
   // Fetch dashboard data
@@ -102,11 +103,9 @@ const Dashboard = () => {
           <p className="text-[#616161] mt-1">Welcome back, <span>{userData?.firstName || 'User'}</span>!</p>
         </div>
         <div className="mt-4 md:mt-0">
-          <Link href="/workouts/new">
-            <a className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]">
-              <i className="fas fa-plus mr-2"></i>
-              Start a Workout
-            </a>
+          <Link href="/workouts/new" className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]">
+            <PlusCircle className="w-4 h-4 mr-2" />
+            Start a Workout
           </Link>
         </div>
       </div>
