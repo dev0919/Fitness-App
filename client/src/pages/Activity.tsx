@@ -1,12 +1,46 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
 const Activity = () => {
+  const { toast } = useToast();
   const [selectedPeriod, setSelectedPeriod] = useState("week"); // "week", "month", "year"
   
   // Fetch activity data
-  const { data: activitiesData, isLoading } = useQuery({
+  const { data: activitiesData = [], isLoading } = useQuery({
     queryKey: ['/api/activities'],
+  });
+  
+  // Create activity mutation
+  const createActivity = useMutation({
+    mutationFn: async (activityData: any) => {
+      return await apiRequest("POST", "/api/activities", activityData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Activity saved",
+        description: "Your activity has been successfully recorded."
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/activities'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/stats/current'] });
+      setShowActivityForm(false);
+      setNewActivity({
+        date: new Date().toISOString().split('T')[0],
+        steps: 0,
+        caloriesBurned: 0,
+        activeMinutes: 0,
+        workoutsCompleted: 0
+      });
+    },
+    onError: (error) => {
+      console.error("Error saving activity:", error);
+      toast({
+        title: "Failed to save activity",
+        description: "There was an error saving your activity. Please try again.",
+        variant: "destructive"
+      });
+    }
   });
 
   // Track form state for adding daily activity
@@ -110,7 +144,7 @@ const Activity = () => {
                   <div>
                     <p className="text-sm text-[#616161]">Average Steps</p>
                     <h4 className="text-lg font-bold text-[#212121]">
-                      {Math.round(activitiesData.reduce((acc, curr) => acc + curr.steps, 0) / activitiesData.length).toLocaleString()}
+                      {Math.round(activitiesData.reduce((acc: number, curr: any) => acc + curr.steps, 0) / activitiesData.length).toLocaleString()}
                     </h4>
                   </div>
                 </div>
@@ -126,7 +160,7 @@ const Activity = () => {
                   <div>
                     <p className="text-sm text-[#616161]">Avg Calories Burned</p>
                     <h4 className="text-lg font-bold text-[#212121]">
-                      {Math.round(activitiesData.reduce((acc, curr) => acc + curr.caloriesBurned, 0) / activitiesData.length).toLocaleString()}
+                      {Math.round(activitiesData.reduce((acc: number, curr: any) => acc + curr.caloriesBurned, 0) / activitiesData.length).toLocaleString()}
                     </h4>
                   </div>
                 </div>
@@ -142,7 +176,7 @@ const Activity = () => {
                   <div>
                     <p className="text-sm text-[#616161]">Avg Active Minutes</p>
                     <h4 className="text-lg font-bold text-[#212121]">
-                      {Math.round(activitiesData.reduce((acc, curr) => acc + curr.activeMinutes, 0) / activitiesData.length).toLocaleString()}
+                      {Math.round(activitiesData.reduce((acc: number, curr: any) => acc + curr.activeMinutes, 0) / activitiesData.length).toLocaleString()}
                     </h4>
                   </div>
                 </div>
@@ -158,7 +192,7 @@ const Activity = () => {
                   <div>
                     <p className="text-sm text-[#616161]">Total Workouts</p>
                     <h4 className="text-lg font-bold text-[#212121]">
-                      {activitiesData.reduce((acc, curr) => acc + curr.workoutsCompleted, 0).toLocaleString()}
+                      {activitiesData.reduce((acc: number, curr: any) => acc + curr.workoutsCompleted, 0).toLocaleString()}
                     </h4>
                   </div>
                 </div>
@@ -170,7 +204,7 @@ const Activity = () => {
               <h3 className="text-lg font-medium text-[#212121] mb-4">Activity History</h3>
               <div className="bg-[#F5F5F5] p-4 rounded-lg">
                 <div className="flex h-64 items-end space-x-2">
-                  {activitiesData.slice(-7).map((activity, index) => (
+                  {activitiesData.slice(-7).map((activity: any, index: number) => (
                     <div key={index} className="flex-1 flex flex-col items-center">
                       <div className="w-full flex flex-col items-center space-y-1 mb-2">
                         <div 
@@ -287,15 +321,19 @@ const Activity = () => {
                 </div>
                 <div className="flex justify-end">
                   <button 
-                    className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#388E3C]"
-                    onClick={() => {
-                      // Here you would submit the activity
-                      console.log('Submitting activity:', newActivity);
-                      // Close form after submission
-                      setShowActivityForm(false);
-                    }}
+                    className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#388E3C] flex items-center"
+                    onClick={() => createActivity.mutate(newActivity)}
+                    disabled={createActivity.isPending}
                   >
-                    Save Activity
+                    {createActivity.isPending ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Saving...
+                      </>
+                    ) : 'Save Activity'}
                   </button>
                 </div>
               </div>
@@ -305,21 +343,24 @@ const Activity = () => {
           <div className="text-center py-10">
             <div className="h-16 w-16 mx-auto bg-[#F5F5F5] rounded-full flex items-center justify-center mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#9E9E9E]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-[#212121]">No activity data yet</h3>
-            <p className="text-[#616161] mt-1 mb-4">Start tracking your daily fitness activity</p>
+            <h3 className="text-lg font-medium text-[#212121] mb-2">No Activity Data Yet</h3>
+            <p className="text-[#616161] mb-6">Start tracking your daily fitness activities</p>
             <button
-              onClick={() => setShowActivityForm(!showActivityForm)}
-              className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#388E3C]"
+              onClick={() => setShowActivityForm(true)}
+              className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#388E3C] inline-flex items-center"
             >
-              Add First Activity
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 3a1 1 0 00-1 1v5H4a1 1 0 100 2h5v5a1 1 0 102 0v-5h5a1 1 0 100-2h-5V4a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              Log Your First Activity
             </button>
             
-            {/* Activity Form for empty state */}
+            {/* Activity Form */}
             {showActivityForm && (
-              <div className="border border-[#E0E0E0] rounded-lg p-4 mt-6 max-w-lg mx-auto">
+              <div className="border border-[#E0E0E0] rounded-lg p-4 mt-8 text-left">
                 <h3 className="text-lg font-medium text-[#212121] mb-4">Log Daily Activity</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
@@ -370,15 +411,19 @@ const Activity = () => {
                 </div>
                 <div className="flex justify-end">
                   <button 
-                    className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#388E3C]"
-                    onClick={() => {
-                      // Here you would submit the activity
-                      console.log('Submitting activity:', newActivity);
-                      // Close form after submission
-                      setShowActivityForm(false);
-                    }}
+                    className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#388E3C] flex items-center"
+                    onClick={() => createActivity.mutate(newActivity)}
+                    disabled={createActivity.isPending}
                   >
-                    Save Activity
+                    {createActivity.isPending ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Saving...
+                      </>
+                    ) : 'Save Activity'}
                   </button>
                 </div>
               </div>
