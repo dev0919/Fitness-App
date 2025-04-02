@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Workouts from "@/pages/Workouts";
+import WorkoutDetail from "@/pages/WorkoutDetail";
 import NewWorkout from "@/pages/NewWorkout";
 import Challenges from "@/pages/Challenges";
 import ChallengeDetail from "@/pages/ChallengeDetail";
@@ -85,6 +86,14 @@ function Router() {
         {isAuthenticated ? (
           <AppLayout>
             <NewWorkout />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/workouts/:id">
+        {isAuthenticated ? (
+          <AppLayout>
+            <WorkoutDetail />
           </AppLayout>
         ) : <Login />}
       </Route>
