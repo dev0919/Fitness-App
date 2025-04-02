@@ -15,7 +15,12 @@ const Activity = () => {
   // Create activity mutation
   const createActivity = useMutation({
     mutationFn: async (activityData: any) => {
-      return await apiRequest("POST", "/api/activities", activityData);
+      // Make sure date is properly formatted
+      const formattedData = {
+        ...activityData,
+        date: new Date(activityData.date).toISOString()
+      };
+      return await apiRequest("POST", "/api/activities", formattedData);
     },
     onSuccess: () => {
       toast({
