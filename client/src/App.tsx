@@ -23,6 +23,7 @@ import { FitConnectLayout } from "@/components/layout/FitConnectLayout";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { WebSocketProvider } from "@/hooks/use-websocket";
+import { WakuProvider } from "@/hooks/use-waku";
 
 // Define authenticated routes that require login
 const authenticatedRoutes = [
@@ -202,10 +203,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <WebSocketProvider>
-          <Router />
-          <Toaster />
-        </WebSocketProvider>
+        <WakuProvider>
+          <WebSocketProvider>
+            <Router />
+            <Toaster />
+          </WebSocketProvider>
+        </WakuProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

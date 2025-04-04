@@ -2,7 +2,8 @@ import * as React from "react";
 import { useEffect, useState, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useWebSocket, Message } from "@/hooks/use-websocket";
+import { useWaku } from "@/hooks/use-waku";
+import { WakuMessage } from "@/lib/wakuService";
 import { FitConnectLayout } from "@/components/layout/FitConnectLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ export default function ChatPage() {
   const { id } = useParams();
   const [_, navigate] = useLocation();
   const { user } = useAuth();
-  const { messages, sendMessage, loadChatHistory, markAsRead, connected } = useWebSocket();
+  const { messages, sendMessage, loadChatHistory, connected } = useWaku();
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -37,7 +38,7 @@ export default function ChatPage() {
   // Load chat history when friend changes
   useEffect(() => {
     if (friendId && friendId > 0) {
-      loadChatHistory(friendId);
+      loadChatHistory(friendId.toString());
     }
   }, [friendId, loadChatHistory]);
   
@@ -48,18 +49,8 @@ export default function ChatPage() {
     }
   }, [messages[friendId]]);
   
-  // Mark unread messages as read
-  useEffect(() => {
-    if (friendId && messages[friendId]) {
-      const unreadMessages = messages[friendId].filter(m => 
-        !m.isRead && m.senderId === friendId
-      );
-      
-      unreadMessages.forEach(message => {
-        markAsRead(message.id);
-      });
-    }
-  }, [friendId, messages, markAsRead]);
+  // With Waku, we don't need to mark messages as read
+  // as we're not tracking read status in this implementation
   
   // Handle sending a message
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -69,7 +60,7 @@ export default function ChatPage() {
     
     setIsSending(true);
     try {
-      await sendMessage(friendId, messageText);
+      await sendMessage(friendId.toString(), messageText);
       setMessageText('');
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -183,7 +174,7 @@ export default function ChatPage() {
                       </div>
                     ) : (
                       conversation.map((message) => {
-                        const isOutgoing = message.senderId === user?.id;
+                        const isOutgoing = message.sender === user?.id.toString();
                         
                         return (
                           <div
@@ -199,7 +190,7 @@ export default function ChatPage() {
                             >
                               <p>{message.content}</p>
                               <p className={`text-xs mt-1 ${isOutgoing ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                                {formatTime(message.createdAt)}
+                                {formatTime(new Date(message.timestamp).toISOString())}
                               </p>
                             </div>
                           </div>
