@@ -337,8 +337,22 @@ const Tokens = () => {
               variant="secondary" 
               className="w-full" 
               onClick={() => {
-                document.querySelector('[value="store"]')?.click();
-                window.scrollTo(0, document.querySelector('.mb-6')?.getBoundingClientRect().bottom + window.scrollY || 0);
+                // Find the store tab and select it
+                setTimeout(() => {
+                  const storeTab = document.querySelector('[value="store"]') as HTMLElement;
+                  if (storeTab) {
+                    storeTab.click();
+                  }
+                  // Scroll to the content
+                  const tabsList = document.querySelector('.mb-6');
+                  if (tabsList) {
+                    const tabsBottom = tabsList.getBoundingClientRect().bottom;
+                    window.scrollTo({
+                      top: tabsBottom + window.scrollY,
+                      behavior: 'smooth'
+                    });
+                  }
+                }, 100);
               }}
             >
               Browse Rewards
