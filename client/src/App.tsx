@@ -17,7 +17,7 @@ import Settings from "@/pages/Settings";
 import Friends from "@/pages/Friends";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
-import { AppLayout } from "@/layouts/AppLayout";
+import { FitConnectLayout } from "@/components/layout/FitConnectLayout";
 import { useEffect, useState } from "react";
 import { apiRequest } from "./lib/queryClient";
 
@@ -79,113 +79,113 @@ function Router() {
       {/* Protected routes */}
       <Route path="/dashboard">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <Dashboard />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/workouts/new">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <NewWorkout />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/workouts/:id">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <WorkoutDetail />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/workouts">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <Workouts />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/challenges/new">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <NewChallenge />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/challenges/:id">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <ChallengeDetail />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/challenges">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <Challenges />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/community">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <Community />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/profile/:id">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <Profile />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/profile">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <Profile />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/edit-profile">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <EditProfile />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/settings">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <Settings />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/friends">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <Friends />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
       <Route path="/">
         {isAuthenticated ? (
-          <AppLayout>
+          <FitConnectLayout>
             <Dashboard />
-          </AppLayout>
+          </FitConnectLayout>
         ) : <Login />}
       </Route>
       
