@@ -47,6 +47,9 @@ const Login = () => {
       setIsLoading(true);
       try {
         const response = await apiRequest("POST", "/api/auth/login", data);
+        if (!response.ok) {
+          throw new Error("Login failed");
+        }
         return await response.json();
       } catch (error) {
         setIsLoading(false);
@@ -57,9 +60,10 @@ const Login = () => {
       setIsLoading(false);
       toast({
         title: "Login successful",
-        description: `Welcome back to FitConnect!`,
+        description: `Welcome back, ${userData.firstName}!`,
       });
-      navigate("/dashboard");
+      // Force reload auth state
+      window.location.href = "/dashboard";
     },
     onError: (error) => {
       setIsLoading(false);
