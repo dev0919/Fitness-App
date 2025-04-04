@@ -9,12 +9,15 @@ import {
   insertChallengeSchema,
   insertChallengeParticipantSchema,
   insertSocialActivitySchema,
-  insertSocialInteractionSchema
+  insertSocialInteractionSchema,
+  insertFriendRequestSchema,
+  insertPrivateMessageSchema
 } from "@shared/schema";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import MemoryStore from "memorystore";
+import { WebSocketServer, WebSocket } from "ws";
 
 const Session = MemoryStore(session);
 
@@ -690,8 +693,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // FRIEND REQUEST ROUTES
+  apiRouter.post('/friend-requests', isAuthenticated, async (req, res) => {
+    try {
+      const senderId = (req.user as any).id;
+      const { receiverId } = req.body;
+      
+      // Validate receiverId
+      if (!receiverId) {
+        return res.status(400).json({ message: 'receiverId is required' });
+      }
+      
+      // Check if user is trying to send a request to themselves
+      if (senderId === receiverId) {
+        return res.status(400).json({ message: 'Cannot send a friend request to yourself' });
+      }
+      
+      // Check if receiver exists
+      const receiver = await storage.getUser(receiverId);
+      if (!receiver) {
+        return res.status(404).json({ message: 'Receiver not found' });
+      }
+      
+      // Check if they are already friends
+      const user = await storage.getUser(senderId);
+      if (user?.friends.includes(receiverId)) {
+        return res.status(400).json({ message: 'Already friends with this user' });
+      }
+      
+      // Check if there is already a pending request
+      const existingRequest = await storage.getFriendRequestBySenderAndReceiver(senderId, receiverId);
+      if (existingRequest && existingRequest.status === 'pending') {
+        return res.status(400).json({ message: 'Friend request already sent' });
+      }
+      
+      // Create friend request
+      const requestData = insertFriendRequestSchema.parse({
+        senderId,
+        receiverId,
+        status: 'pending'
+      });
+      
+      const request = await storage.createFriendRequest(requestData);
+      res.status(201).json(request);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid input data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  apiRouter.get('/friend-requests/pending', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const requests = await storage.getPendingFriendRequests(userId);
+      
+      // Get sender details for each request
+      const detailedRequests = await Promise.all(requests.map(async (request) => {
+        const sender = await storage.getUser(request.senderId);
+        if (!sender) return request;
+        
+        const { password, ...senderWithoutPassword } = sender;
+        return { ...request, sender: senderWithoutPassword };
+      }));
+      
+      res.json(detailedRequests);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  apiRouter.patch('/friend-requests/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const requestId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || !['accepted', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status. Must be "accepted" or "rejected"' });
+      }
+      
+      // Get the request
+      const request = await storage.getFriendRequest(requestId);
+      if (!request) {
+        return res.status(404).json({ message: 'Friend request not found' });
+      }
+      
+      // Check if the user is the receiver
+      if (request.receiverId !== userId) {
+        return res.status(403).json({ message: 'Cannot update a friend request that was not sent to you' });
+      }
+      
+      // Check if the request is still pending
+      if (request.status !== 'pending') {
+        return res.status(400).json({ message: 'This friend request has already been processed' });
+      }
+      
+      // Update request status (this will also add as friends if accepted)
+      const updatedRequest = await storage.updateFriendRequestStatus(requestId, status);
+      res.json(updatedRequest);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  // MESSAGING ROUTES
+  apiRouter.get('/messages/:userId', isAuthenticated, async (req, res) => {
+    try {
+      const currentUserId = (req.user as any).id;
+      const otherUserId = parseInt(req.params.userId);
+      
+      // Check if users are friends
+      const currentUser = await storage.getUser(currentUserId);
+      if (!currentUser?.friends.includes(otherUserId)) {
+        return res.status(403).json({ message: 'You can only message your friends' });
+      }
+      
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const messages = await storage.getConversation(currentUserId, otherUserId, limit);
+      
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  apiRouter.patch('/messages/:id/read', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const messageId = parseInt(req.params.id);
+      
+      // Check if message exists and is addressed to the current user
+      const message = await storage.getPrivateMessage(messageId);
+      if (!message) {
+        return res.status(404).json({ message: 'Message not found' });
+      }
+      
+      if (message.receiverId !== userId) {
+        return res.status(403).json({ message: 'Cannot mark a message as read if you are not the receiver' });
+      }
+      
+      const updatedMessage = await storage.markMessageAsRead(messageId);
+      res.json(updatedMessage);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  apiRouter.get('/messages/unread/count', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
   app.use('/api', apiRouter);
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server for real-time chat
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Map to store active connections
+  const activeConnections = new Map<number, WebSocket>();
+  
+  wss.on('connection', (ws: WebSocket, req) => {
+    // Parse the session from the request to get the user
+    const sessionID = req.url?.split('sessionID=')[1];
+    if (!sessionID) {
+      ws.close(1008, 'Authentication required');
+      return;
+    }
+    
+    // Use the express session parser to get the session
+    app.request.sessionStore.get(sessionID, (err, session) => {
+      if (err || !session || !session.passport || !session.passport.user) {
+        ws.close(1008, 'Authentication required');
+        return;
+      }
+      
+      const userId = session.passport.user;
+      activeConnections.set(userId, ws);
+      
+      // Handle incoming messages
+      ws.on('message', async (message) => {
+        try {
+          const data = JSON.parse(message.toString());
+          
+          if (data.type === 'message') {
+            const { receiverId, content, publicKey } = data;
+            
+            // Verify that the sender and receiver are friends
+            const sender = await storage.getUser(userId);
+            if (!sender || !sender.friends.includes(receiverId)) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                error: 'You can only send messages to your friends'
+              }));
+              return;
+            }
+            
+            // Create the message in the database
+            const messageData = insertPrivateMessageSchema.parse({
+              senderId: userId,
+              receiverId,
+              encryptedContent: content.encryptedContent,
+              encryptedKey: content.encryptedKey,
+              iv: content.iv,
+              isRead: false
+            });
+            
+            const savedMessage = await storage.createPrivateMessage(messageData);
+            
+            // Send the message to the receiver if they are online
+            const receiverWs = activeConnections.get(receiverId);
+            if (receiverWs && receiverWs.readyState === WebSocket.OPEN) {
+              receiverWs.send(JSON.stringify({
+                type: 'message',
+                message: savedMessage,
+                senderPublicKey: publicKey
+              }));
+            }
+            
+            // Acknowledge message receipt to sender
+            ws.send(JSON.stringify({
+              type: 'messageAck',
+              messageId: savedMessage.id
+            }));
+          }
+        } catch (error) {
+          console.error('Error processing WebSocket message:', error);
+          ws.send(JSON.stringify({
+            type: 'error',
+            error: 'Error processing message'
+          }));
+        }
+      });
+      
+      // Handle disconnection
+      ws.on('close', () => {
+        activeConnections.delete(userId);
+      });
+      
+      // Send confirmation of connection
+      ws.send(JSON.stringify({
+        type: 'connected',
+        userId
+      }));
+    });
+  });
+  
   return httpServer;
 }

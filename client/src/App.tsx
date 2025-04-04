@@ -17,9 +17,12 @@ import Settings from "@/pages/Settings";
 import Friends from "@/pages/Friends";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import FriendRequests from "@/pages/FriendRequests";
+import Chat from "@/pages/Chat";
 import { FitConnectLayout } from "@/components/layout/FitConnectLayout";
 import { useEffect, useState } from "react";
-import { apiRequest } from "./lib/queryClient";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { WebSocketProvider } from "@/hooks/use-websocket";
 
 // Define authenticated routes that require login
 const authenticatedRoutes = [
@@ -35,37 +38,8 @@ const authenticatedRoutes = [
 ];
 
 function Router() {
-  const [location, setLocation] = useLocation();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Check authentication status
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        await apiRequest("GET", "/api/auth/me");
-        setIsAuthenticated(true);
-      } catch (error) {
-        setIsAuthenticated(false);
-        
-        // Redirect to login if user tries to access protected route
-        if (authenticatedRoutes.some(route => location.startsWith(route))) {
-          setLocation("/login");
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkAuth();
-  }, [location, setLocation]);
-
-  // Handle redirects for authenticated users
-  useEffect(() => {
-    if (isAuthenticated && (location === "/login" || location === "/register" || location === "/")) {
-      setLocation("/dashboard");
-    }
-  }, [isAuthenticated, location, setLocation]);
+  const [_, setLocation] = useLocation();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -73,12 +47,17 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
+      <Route path="/login">
+        {user ? <Dashboard /> : <Login />}
+      </Route>
+      
+      <Route path="/register">
+        {user ? <Dashboard /> : <Register />}
+      </Route>
       
       {/* Protected routes */}
       <Route path="/dashboard">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <Dashboard />
           </FitConnectLayout>
@@ -86,7 +65,7 @@ function Router() {
       </Route>
       
       <Route path="/workouts/new">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <NewWorkout />
           </FitConnectLayout>
@@ -94,7 +73,7 @@ function Router() {
       </Route>
       
       <Route path="/workouts/:id">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <WorkoutDetail />
           </FitConnectLayout>
@@ -102,7 +81,7 @@ function Router() {
       </Route>
       
       <Route path="/workouts">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <Workouts />
           </FitConnectLayout>
@@ -110,7 +89,7 @@ function Router() {
       </Route>
       
       <Route path="/challenges/new">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <NewChallenge />
           </FitConnectLayout>
@@ -118,7 +97,7 @@ function Router() {
       </Route>
       
       <Route path="/challenges/:id">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <ChallengeDetail />
           </FitConnectLayout>
@@ -126,7 +105,7 @@ function Router() {
       </Route>
       
       <Route path="/challenges">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <Challenges />
           </FitConnectLayout>
@@ -134,7 +113,7 @@ function Router() {
       </Route>
       
       <Route path="/community">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <Community />
           </FitConnectLayout>
@@ -142,7 +121,7 @@ function Router() {
       </Route>
       
       <Route path="/profile/:id">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <Profile />
           </FitConnectLayout>
@@ -150,7 +129,7 @@ function Router() {
       </Route>
       
       <Route path="/profile">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <Profile />
           </FitConnectLayout>
@@ -158,7 +137,7 @@ function Router() {
       </Route>
       
       <Route path="/edit-profile">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <EditProfile />
           </FitConnectLayout>
@@ -166,7 +145,7 @@ function Router() {
       </Route>
       
       <Route path="/settings">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <Settings />
           </FitConnectLayout>
@@ -174,15 +153,39 @@ function Router() {
       </Route>
       
       <Route path="/friends">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <Friends />
           </FitConnectLayout>
         ) : <Login />}
       </Route>
       
+      <Route path="/friend-requests">
+        {user ? (
+          <FitConnectLayout>
+            <FriendRequests />
+          </FitConnectLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/chat/:id">
+        {user ? (
+          <FitConnectLayout>
+            <Chat />
+          </FitConnectLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/chat">
+        {user ? (
+          <FitConnectLayout>
+            <Chat />
+          </FitConnectLayout>
+        ) : <Login />}
+      </Route>
+      
       <Route path="/">
-        {isAuthenticated ? (
+        {user ? (
           <FitConnectLayout>
             <Dashboard />
           </FitConnectLayout>
@@ -198,8 +201,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <WebSocketProvider>
+          <Router />
+          <Toaster />
+        </WebSocketProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -19,7 +19,13 @@ import {
   InsertSocialActivity,
   socialInteractions,
   SocialInteraction,
-  InsertSocialInteraction
+  InsertSocialInteraction,
+  friendRequests,
+  FriendRequest,
+  InsertFriendRequest,
+  privateMessages,
+  PrivateMessage,
+  InsertPrivateMessage
 } from "@shared/schema";
 
 export interface IStorage {
@@ -33,6 +39,20 @@ export interface IStorage {
   addFriend(userId: number, friendId: number): Promise<User | undefined>;
   removeFriend(userId: number, friendId: number): Promise<User | undefined>;
   getFriends(userId: number): Promise<User[]>;
+  
+  // Friend Request methods
+  createFriendRequest(request: InsertFriendRequest): Promise<FriendRequest>;
+  getFriendRequest(id: number): Promise<FriendRequest | undefined>;
+  getPendingFriendRequests(userId: number): Promise<FriendRequest[]>;
+  updateFriendRequestStatus(id: number, status: string): Promise<FriendRequest | undefined>;
+  getFriendRequestBySenderAndReceiver(senderId: number, receiverId: number): Promise<FriendRequest | undefined>;
+  
+  // Private Message methods
+  createPrivateMessage(message: InsertPrivateMessage): Promise<PrivateMessage>;
+  getPrivateMessage(id: number): Promise<PrivateMessage | undefined>;
+  getConversation(userId1: number, userId2: number, limit?: number): Promise<PrivateMessage[]>;
+  markMessageAsRead(id: number): Promise<PrivateMessage | undefined>;
+  getUnreadMessageCount(userId: number): Promise<number>;
   
   // Workout methods
   getWorkout(id: number): Promise<Workout | undefined>;
@@ -82,6 +102,8 @@ export class MemStorage implements IStorage {
   private challengeParticipants: Map<number, ChallengeParticipant>;
   private socialActivities: Map<number, SocialActivity>;
   private socialInteractions: Map<number, SocialInteraction>;
+  private friendRequests: Map<number, FriendRequest>;
+  private privateMessages: Map<number, PrivateMessage>;
   private userIdCounter: number;
   private workoutIdCounter: number;
   private activityIdCounter: number;
@@ -89,6 +111,8 @@ export class MemStorage implements IStorage {
   private challengeParticipantIdCounter: number;
   private socialActivityIdCounter: number;
   private socialInteractionIdCounter: number;
+  private friendRequestIdCounter: number;
+  private privateMessageIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -98,6 +122,8 @@ export class MemStorage implements IStorage {
     this.challengeParticipants = new Map();
     this.socialActivities = new Map();
     this.socialInteractions = new Map();
+    this.friendRequests = new Map();
+    this.privateMessages = new Map();
     this.userIdCounter = 1;
     this.workoutIdCounter = 1;
     this.activityIdCounter = 1;
@@ -105,6 +131,8 @@ export class MemStorage implements IStorage {
     this.challengeParticipantIdCounter = 1;
     this.socialActivityIdCounter = 1;
     this.socialInteractionIdCounter = 1;
+    this.friendRequestIdCounter = 1;
+    this.privateMessageIdCounter = 1;
     
     // Initialize with some sample data
     this.initializeData();
@@ -583,6 +611,90 @@ export class MemStorage implements IStorage {
 
   async deleteSocialInteraction(id: number): Promise<boolean> {
     return this.socialInteractions.delete(id);
+  }
+
+  // Friend Request methods
+  async createFriendRequest(request: InsertFriendRequest): Promise<FriendRequest> {
+    const id = this.friendRequestIdCounter++;
+    const createdAt = new Date();
+    const updatedAt = new Date();
+    const newRequest: FriendRequest = { ...request, id, createdAt, updatedAt };
+    this.friendRequests.set(id, newRequest);
+    return newRequest;
+  }
+
+  async getFriendRequest(id: number): Promise<FriendRequest | undefined> {
+    return this.friendRequests.get(id);
+  }
+
+  async getPendingFriendRequests(userId: number): Promise<FriendRequest[]> {
+    return Array.from(this.friendRequests.values())
+      .filter(request => request.receiverId === userId && request.status === "pending")
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async updateFriendRequestStatus(id: number, status: string): Promise<FriendRequest | undefined> {
+    const request = await this.getFriendRequest(id);
+    if (!request) return undefined;
+
+    const updatedRequest: FriendRequest = {
+      ...request,
+      status,
+      updatedAt: new Date()
+    };
+    this.friendRequests.set(id, updatedRequest);
+    
+    // If the request was accepted, add users as friends
+    if (status === "accepted") {
+      await this.addFriend(request.senderId, request.receiverId);
+      await this.addFriend(request.receiverId, request.senderId);
+    }
+    
+    return updatedRequest;
+  }
+
+  async getFriendRequestBySenderAndReceiver(senderId: number, receiverId: number): Promise<FriendRequest | undefined> {
+    return Array.from(this.friendRequests.values()).find(
+      request => request.senderId === senderId && request.receiverId === receiverId
+    );
+  }
+
+  // Private Message methods
+  async createPrivateMessage(message: InsertPrivateMessage): Promise<PrivateMessage> {
+    const id = this.privateMessageIdCounter++;
+    const createdAt = new Date();
+    const newMessage: PrivateMessage = { ...message, id, createdAt };
+    this.privateMessages.set(id, newMessage);
+    return newMessage;
+  }
+
+  async getPrivateMessage(id: number): Promise<PrivateMessage | undefined> {
+    return this.privateMessages.get(id);
+  }
+
+  async getConversation(userId1: number, userId2: number, limit: number = 50): Promise<PrivateMessage[]> {
+    return Array.from(this.privateMessages.values())
+      .filter(msg => 
+        (msg.senderId === userId1 && msg.receiverId === userId2) || 
+        (msg.senderId === userId2 && msg.receiverId === userId1)
+      )
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      .slice(-limit);
+  }
+
+  async markMessageAsRead(id: number): Promise<PrivateMessage | undefined> {
+    const message = await this.getPrivateMessage(id);
+    if (!message) return undefined;
+
+    const updatedMessage: PrivateMessage = { ...message, isRead: true };
+    this.privateMessages.set(id, updatedMessage);
+    return updatedMessage;
+  }
+
+  async getUnreadMessageCount(userId: number): Promise<number> {
+    return Array.from(this.privateMessages.values())
+      .filter(msg => msg.receiverId === userId && !msg.isRead)
+      .length;
   }
 }
 

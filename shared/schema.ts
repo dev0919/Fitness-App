@@ -164,3 +164,46 @@ export type InsertSocialActivity = z.infer<typeof insertSocialActivitySchema>;
 
 export type SocialInteraction = typeof socialInteractions.$inferSelect;
 export type InsertSocialInteraction = z.infer<typeof insertSocialInteractionSchema>;
+
+// Friend Request schema
+export const friendRequests = pgTable("friend_requests", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull(),
+  receiverId: integer("receiver_id").notNull(),
+  status: text("status").notNull().default("pending"), // "pending", "accepted", "rejected"
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertFriendRequestSchema = createInsertSchema(friendRequests).pick({
+  senderId: true,
+  receiverId: true,
+  status: true,
+});
+
+export type FriendRequest = typeof friendRequests.$inferSelect;
+export type InsertFriendRequest = z.infer<typeof insertFriendRequestSchema>;
+
+// Private Message schema (for E2E encrypted chat)
+export const privateMessages = pgTable("private_messages", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").notNull(),
+  receiverId: integer("receiver_id").notNull(),
+  encryptedContent: text("encrypted_content").notNull(), // E2E encrypted message content
+  encryptedKey: text("encrypted_key").notNull(), // Receiver's public key encrypted message key
+  iv: text("iv").notNull(), // Initialization vector for encryption
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  isRead: boolean("is_read").notNull().default(false),
+});
+
+export const insertPrivateMessageSchema = createInsertSchema(privateMessages).pick({
+  senderId: true,
+  receiverId: true,
+  encryptedContent: true,
+  encryptedKey: true,
+  iv: true,
+  isRead: true,
+});
+
+export type PrivateMessage = typeof privateMessages.$inferSelect;
+export type InsertPrivateMessage = z.infer<typeof insertPrivateMessageSchema>;
