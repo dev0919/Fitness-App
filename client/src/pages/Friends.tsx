@@ -15,6 +15,21 @@ export default function FriendsPage() {
   const [friendCode, setFriendCode] = useState("");
   const [searchActive, setSearchActive] = useState(false);
 
+  // Fetch current user data to get friend code
+  const {
+    data: currentUser,
+    isLoading: isLoadingUser,
+  } = useQuery<User>({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/me");
+      if (!res.ok) {
+        throw new Error("Failed to fetch user data");
+      }
+      return res.json();
+    },
+  });
+
   // Fetch friends list
   const {
     data: friends,
@@ -282,10 +297,14 @@ export default function FriendsPage() {
             )}
           </CardContent>
           <CardFooter className="border-t bg-muted/50 rounded-b-lg">
-            <div className="w-full flex justify-between items-center">
-              <p className="text-sm text-muted-foreground">
-                Your Friend Code: <span className="font-mono font-bold">{friends?.[0]?.friendCode || "Loading..."}</span>
-              </p>
+            <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="p-3 border rounded-md bg-white w-full md:w-auto">
+                <p className="text-sm font-medium mb-1 text-center md:text-left">Your Friend Code</p>
+                <div className="flex items-center justify-center md:justify-start gap-2">
+                  <span className="font-mono text-lg font-bold bg-[#4CAF50]/10 text-[#4CAF50] py-1 px-2 rounded">{currentUser?.friendCode || "Loading..."}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 text-center md:text-left">Share this code with friends so they can add you</p>
+              </div>
               <p className="text-sm text-muted-foreground">
                 {friends ? `${friends.length} friend${friends.length !== 1 ? 's' : ''}` : 'Loading...'}
               </p>
