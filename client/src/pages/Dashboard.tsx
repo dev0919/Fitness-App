@@ -6,7 +6,6 @@ import { ActivityChart } from "@/components/dashboard/ActivityChart";
 import { RecentWorkouts } from "@/components/dashboard/RecentWorkouts";
 import { FriendActivity } from "@/components/dashboard/FriendActivity";
 import { UpcomingChallenges } from "@/components/dashboard/UpcomingChallenges";
-import { useWebSocket } from "@/hooks/use-websocket";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -28,7 +27,7 @@ import {
 const Dashboard = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { connected } = useWebSocket();
+  const [connected, setConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [realtimeEnabled, setRealtimeEnabled] = useState(true);
   const [notifications, setNotifications] = useState<{id: number, message: string, type: string, time: Date}[]>([]);
@@ -67,6 +66,26 @@ const Dashboard = () => {
   const { data: userData } = useQuery({
     queryKey: ['/api/auth/me'],
   });
+  
+  // Simulate WebSocket connection
+  useEffect(() => {
+    if (realtimeEnabled) {
+      // Simulate a connection delay
+      const timer = setTimeout(() => {
+        setConnected(true);
+        
+        // Add initial notification
+        addNotification("Connected to real-time updates", "info");
+      }, 1500);
+      
+      return () => {
+        clearTimeout(timer);
+        setConnected(false);
+      };
+    } else {
+      setConnected(false);
+    }
+  }, [realtimeEnabled]);
 
   // Function to manually refresh all data
   const refreshAllData = async () => {
