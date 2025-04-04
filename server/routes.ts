@@ -11,7 +11,12 @@ import {
   insertSocialActivitySchema,
   insertSocialInteractionSchema,
   insertFriendRequestSchema,
-  insertPrivateMessageSchema
+  insertPrivateMessageSchema,
+  insertTokenWalletSchema,
+  insertTokenTransactionSchema,
+  insertTokenRewardRuleSchema,
+  insertRewardStoreItemSchema,
+  insertUserRewardPurchaseSchema
 } from "@shared/schema";
 import session from "express-session";
 import passport from "passport";
@@ -884,6 +889,184 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ count });
     } catch (error) {
       res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // TOKEN WALLET ROUTES
+  apiRouter.get('/wallet', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const wallet = await storage.getTokenWallet(userId);
+      
+      if (!wallet) {
+        // Create a new wallet if one doesn't exist
+        const newWallet = await storage.createTokenWallet({
+          userId,
+          balance: "0",
+          walletAddress: null
+        });
+        return res.json(newWallet);
+      }
+      
+      res.json(wallet);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error getting wallet' });
+    }
+  });
+
+  apiRouter.patch('/wallet/address', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { walletAddress } = req.body;
+      
+      if (!walletAddress) {
+        return res.status(400).json({ message: 'Wallet address is required' });
+      }
+      
+      const updatedWallet = await storage.updateWalletAddress(userId, walletAddress);
+      if (!updatedWallet) {
+        return res.status(404).json({ message: 'Wallet not found' });
+      }
+      
+      res.json(updatedWallet);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error updating wallet address' });
+    }
+  });
+
+  // TOKEN TRANSACTION ROUTES
+  apiRouter.get('/transactions', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      
+      const transactions = await storage.getUserTokenTransactions(userId, limit);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error getting transactions' });
+    }
+  });
+
+  apiRouter.post('/transactions', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const transactionData = insertTokenTransactionSchema.parse({
+        ...req.body,
+        userId,
+        status: req.body.status || 'pending'
+      });
+      
+      const transaction = await storage.createTokenTransaction(transactionData);
+      res.status(201).json(transaction);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid input data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Server error creating transaction' });
+    }
+  });
+
+  // TOKEN REWARD RULES ROUTES
+  apiRouter.get('/reward-rules', async (req, res) => {
+    try {
+      const rules = await storage.getTokenRewardRules();
+      res.json(rules);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error getting reward rules' });
+    }
+  });
+
+  // REWARD STORE ROUTES
+  apiRouter.get('/store', async (req, res) => {
+    try {
+      const items = await storage.getRewardStoreItems();
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error getting store items' });
+    }
+  });
+
+  apiRouter.get('/store/:id', async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      const item = await storage.getRewardStoreItem(itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+      
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error getting store item' });
+    }
+  });
+
+  // USER REWARD PURCHASES ROUTES
+  apiRouter.get('/purchases', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const purchases = await storage.getUserRewardPurchases(userId);
+      res.json(purchases);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error getting purchases' });
+    }
+  });
+
+  apiRouter.post('/purchases', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const purchaseData = insertUserRewardPurchaseSchema.parse({
+        ...req.body,
+        userId
+      });
+      
+      // Validate that the user has enough tokens to make the purchase
+      const wallet = await storage.getTokenWallet(userId);
+      const item = await storage.getRewardStoreItem(purchaseData.itemId);
+      
+      if (!wallet) {
+        return res.status(400).json({ message: 'User wallet not found' });
+      }
+      
+      if (!item) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+      
+      if (!item.isActive) {
+        return res.status(400).json({ message: 'This item is no longer available' });
+      }
+      
+      // Check inventory
+      if (item.inventory !== null && item.inventory <= 0) {
+        return res.status(400).json({ message: 'This item is out of stock' });
+      }
+      
+      // Calculate total cost
+      const quantity = purchaseData.quantity || 1;
+      const totalCost = BigInt(item.price) * BigInt(quantity);
+      
+      // Check if user has enough tokens
+      if (BigInt(wallet.balance) < totalCost) {
+        return res.status(400).json({ 
+          message: 'Insufficient tokens', 
+          balance: wallet.balance,
+          required: totalCost.toString()
+        });
+      }
+      
+      // Create the purchase
+      const purchase = await storage.createUserRewardPurchase({
+        ...purchaseData,
+        totalPrice: totalCost.toString(),
+        status: 'completed'
+      });
+      
+      res.status(201).json(purchase);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid input data', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Server error creating purchase' });
     }
   });
 

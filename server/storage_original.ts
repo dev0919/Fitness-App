@@ -1091,3 +1091,5 @@ export class MemStorage implements IStorage {
     return updatedPurchase;
   }
 }
+
+export const storage = new MemStorage();

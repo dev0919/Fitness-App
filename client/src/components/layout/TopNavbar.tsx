@@ -111,6 +111,18 @@ export const TopNavbar = () => {
                 isActive={location.startsWith("/chat")}
               />
               <NavItem
+                href="/tokens"
+                icon="fa-coins"
+                label="Tokens"
+                isActive={location === "/tokens"}
+              />
+              <NavItem
+                href="/rewards"
+                icon="fa-gift"
+                label="Rewards"
+                isActive={location === "/rewards"}
+              />
+              <NavItem
                 href="/profile"
                 icon="fa-user"
                 label="Profile"
@@ -208,6 +220,20 @@ export const TopNavbar = () => {
               icon="fa-comment"
               label="Chat"
               isActive={location.startsWith("/chat")}
+              onClick={closeMobileMenu}
+            />
+            <NavItem
+              href="/tokens"
+              icon="fa-coins"
+              label="Tokens"
+              isActive={location === "/tokens"}
+              onClick={closeMobileMenu}
+            />
+            <NavItem
+              href="/rewards"
+              icon="fa-gift"
+              label="Rewards"
+              isActive={location === "/rewards"}
               onClick={closeMobileMenu}
             />
             <NavItem

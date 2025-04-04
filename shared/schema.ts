@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, numeric, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -207,3 +207,127 @@ export const insertPrivateMessageSchema = createInsertSchema(privateMessages).pi
 
 export type PrivateMessage = typeof privateMessages.$inferSelect;
 export type InsertPrivateMessage = z.infer<typeof insertPrivateMessageSchema>;
+
+// Token Wallet schema
+export const tokenWallets = pgTable("token_wallets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+  balance: numeric("balance").notNull().default("0"),
+  walletAddress: varchar("wallet_address", { length: 42 }), // Optional Ethereum wallet address
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertTokenWalletSchema = createInsertSchema(tokenWallets).pick({
+  userId: true,
+  balance: true,
+  walletAddress: true,
+});
+
+export type TokenWallet = typeof tokenWallets.$inferSelect;
+export type InsertTokenWallet = z.infer<typeof insertTokenWalletSchema>;
+
+// Token Transaction schema
+export const tokenTransactions = pgTable("token_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  amount: numeric("amount").notNull(), // Positive for earning, negative for spending
+  type: text("type").notNull(), // "workout", "challenge", "social", "redemption", "deposit", "withdrawal"
+  relatedId: integer("related_id"), // ID of related activity (workout, challenge, etc.)
+  status: text("status").notNull().default("completed"), // "pending", "completed", "failed"
+  txHash: varchar("tx_hash", { length: 66 }), // Optional blockchain transaction hash
+  description: text("description").notNull(), // User-friendly description
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTokenTransactionSchema = createInsertSchema(tokenTransactions).pick({
+  userId: true,
+  amount: true,
+  type: true,
+  relatedId: true,
+  status: true,
+  txHash: true,
+  description: true,
+});
+
+export type TokenTransaction = typeof tokenTransactions.$inferSelect;
+export type InsertTokenTransaction = z.infer<typeof insertTokenTransactionSchema>;
+
+// Token Reward Rules schema
+export const tokenRewardRules = pgTable("token_reward_rules", {
+  id: serial("id").primaryKey(),
+  actionType: text("action_type").notNull().unique(), // "workout_completed", "challenge_completed", "social_interaction"
+  amount: numeric("amount").notNull(), // Base amount of tokens for this action
+  multiplier: numeric("multiplier").notNull().default("1"), // Multiplier for scaling (e.g., by difficulty)
+  cooldownMinutes: integer("cooldown_minutes").notNull().default(0), // Minimum time between rewards
+  maxDaily: integer("max_daily").notNull().default(0), // Maximum rewards per day (0 for unlimited)
+  isActive: boolean("is_active").notNull().default(true),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertTokenRewardRuleSchema = createInsertSchema(tokenRewardRules).pick({
+  actionType: true,
+  amount: true,
+  multiplier: true,
+  cooldownMinutes: true,
+  maxDaily: true,
+  isActive: true,
+});
+
+export type TokenRewardRule = typeof tokenRewardRules.$inferSelect;
+export type InsertTokenRewardRule = z.infer<typeof insertTokenRewardRuleSchema>;
+
+// Reward Store Item schema
+export const rewardStoreItems = pgTable("reward_store_items", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  imageUrl: text("image_url"),
+  price: numeric("price").notNull(),
+  category: text("category").notNull(), // "premium_feature", "merchandise", "gym_discount", "virtual_goods"
+  inventory: integer("inventory"), // null for unlimited
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertRewardStoreItemSchema = createInsertSchema(rewardStoreItems).pick({
+  name: true,
+  description: true,
+  imageUrl: true,
+  price: true,
+  category: true,
+  inventory: true,
+  isActive: true,
+});
+
+export type RewardStoreItem = typeof rewardStoreItems.$inferSelect;
+export type InsertRewardStoreItem = z.infer<typeof insertRewardStoreItemSchema>;
+
+// User Reward Purchases schema
+export const userRewardPurchases = pgTable("user_reward_purchases", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  itemId: integer("item_id").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  totalPrice: numeric("total_price").notNull(),
+  status: text("status").notNull().default("completed"), // "pending", "completed", "redeemed", "cancelled"
+  redemptionCode: text("redemption_code"),
+  transactionId: integer("transaction_id"), // ID of the token transaction
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  redeemedAt: timestamp("redeemed_at"),
+});
+
+export const insertUserRewardPurchaseSchema = createInsertSchema(userRewardPurchases).pick({
+  userId: true,
+  itemId: true,
+  quantity: true,
+  totalPrice: true,
+  status: true,
+  redemptionCode: true,
+  transactionId: true,
+  redeemedAt: true,
+});
+
+export type UserRewardPurchase = typeof userRewardPurchases.$inferSelect;
+export type InsertUserRewardPurchase = z.infer<typeof insertUserRewardPurchaseSchema>;

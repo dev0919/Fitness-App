@@ -19,6 +19,8 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import FriendRequests from "@/pages/FriendRequests";
 import Chat from "@/pages/Chat";
+import Tokens from "@/pages/Tokens";
+import Rewards from "@/pages/Rewards";
 import { FitConnectLayout } from "@/components/layout/FitConnectLayout";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -35,7 +37,9 @@ const authenticatedRoutes = [
   "/edit-profile",
   "/settings",
   "/friends",
-  "/chat"
+  "/chat",
+  "/tokens",
+  "/rewards"
 ];
 
 function Router() {
@@ -181,6 +185,22 @@ function Router() {
         {user ? (
           <FitConnectLayout>
             <Chat />
+          </FitConnectLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/tokens">
+        {user ? (
+          <FitConnectLayout>
+            <Tokens />
+          </FitConnectLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/rewards">
+        {user ? (
+          <FitConnectLayout>
+            <Rewards />
           </FitConnectLayout>
         ) : <Login />}
       </Route>
