@@ -1,6 +1,6 @@
-import express, { type Express, Request, Response } from "express";
+import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { MemStorage } from "./storage";
 import { z } from "zod";
 import { 
   insertUserSchema, 
@@ -23,6 +23,9 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import MemoryStore from "memorystore";
 import { WebSocketServer, WebSocket } from "ws";
+
+// Initialize the memory storage
+const storage = new MemStorage();
 
 const Session = MemoryStore(session);
 
@@ -143,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post('/auth/login', (req, res, next) => {
     console.log('Login attempt:', req.body);
     
-    passport.authenticate('local', (err, user, info) => {
+    passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
         console.error('Login error:', err);
         return res.status(500).json({ message: 'Internal server error during login' });
