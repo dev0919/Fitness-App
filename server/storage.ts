@@ -208,9 +208,25 @@ export class MemStorage implements IStorage {
     // Generate a random 8-character alphanumeric code
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
-    for (let i = 0; i < 8; i++) {
-      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    let isUnique = false;
+    
+    // Keep generating until we find a unique code
+    while (!isUnique) {
+      code = '';
+      for (let i = 0; i < 8; i++) {
+        code += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      
+      // Check if this code is already used by another user
+      const existingUser = Array.from(this.users.values()).find(
+        (user) => user.friendCode === code
+      );
+      
+      if (!existingUser) {
+        isUnique = true;
+      }
     }
+    
     return code;
   }
 

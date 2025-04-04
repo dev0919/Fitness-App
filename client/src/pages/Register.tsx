@@ -57,7 +57,35 @@ const Register = () => {
       setIsLoading(true);
       // Remove confirmPassword as it's not part of the API schema
       const { confirmPassword, ...registerData } = data;
-      return await apiRequest("POST", "/api/auth/register", registerData);
+      
+      try {
+        const response = await apiRequest("POST", "/api/auth/register", registerData);
+        return response;
+      } catch (error: any) {
+        // Extract error message from API response if available
+        let errorMessage = "An error occurred during registration.";
+        
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        // Handle specific error cases
+        if (errorMessage.includes("Username already exists")) {
+          form.setError("username", { 
+            type: "manual", 
+            message: "This username is already taken. Please choose another one."
+          });
+        } else if (errorMessage.includes("Email already exists")) {
+          form.setError("email", { 
+            type: "manual", 
+            message: "This email is already registered. Please use a different email or login."
+          });
+        }
+        
+        throw new Error(errorMessage);
+      }
     },
     onSuccess: () => {
       toast({
