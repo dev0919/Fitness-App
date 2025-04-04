@@ -40,8 +40,7 @@ export function useFriendRequests() {
   // Send friend request mutation
   const sendRequestMutation = useMutation({
     mutationFn: async (receiverId: number) => {
-      const res = await apiRequest("POST", "/api/friend-requests", { receiverId });
-      return res.json();
+      return await apiRequest("POST", "/api/friend-requests", { receiverId });
     },
     onSuccess: () => {
       toast({
@@ -61,8 +60,7 @@ export function useFriendRequests() {
   // Accept friend request mutation
   const acceptRequestMutation = useMutation({
     mutationFn: async (requestId: number) => {
-      const res = await apiRequest("PATCH", `/api/friend-requests/${requestId}`, { status: "accepted" });
-      return res.json();
+      return await apiRequest("PATCH", `/api/friend-requests/${requestId}`, { status: "accepted" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/friend-requests/pending'] });
@@ -84,8 +82,7 @@ export function useFriendRequests() {
   // Reject friend request mutation
   const rejectRequestMutation = useMutation({
     mutationFn: async (requestId: number) => {
-      const res = await apiRequest("PATCH", `/api/friend-requests/${requestId}`, { status: "rejected" });
-      return res.json();
+      return await apiRequest("PATCH", `/api/friend-requests/${requestId}`, { status: "rejected" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/friend-requests/pending'] });
@@ -106,12 +103,7 @@ export function useFriendRequests() {
   // Mutation to find a user by friend code
   const findByFriendCodeMutation = useMutation({
     mutationFn: async (friendCode: string) => {
-      const res = await fetch(`/api/users/find/${friendCode}`);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to find user");
-      }
-      return res.json();
+      return await apiRequest("GET", `/api/users/find/${friendCode}`);
     },
   });
 

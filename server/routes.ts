@@ -22,14 +22,17 @@ import { WebSocketServer, WebSocket } from "ws";
 const Session = MemoryStore(session);
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Create session store
+  const sessionStore = new Session({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  });
+  
   // Session setup
   app.use(session({
     secret: 'fitconnect-secret-key',
     resave: true,
     saveUninitialized: true,
-    store: new Session({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    }),
+    store: sessionStore,
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       secure: false, // set to false for development
@@ -927,9 +930,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return;
     }
     
-    // Use the express session parser to get the session
-    app.request.sessionStore.get(sessionID, (err, session) => {
+    // Use the session store to get the session
+    sessionStore.get(sessionID, (err, session) => {
       if (err || !session || !session.passport || !session.passport.user) {
+        console.error('WebSocket auth error:', err || 'No valid session');
         ws.close(1008, 'Authentication required');
         return;
       }
