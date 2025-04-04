@@ -753,7 +753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if they are already friends
       const user = await storage.getUser(senderId);
-      if (user?.friends.includes(receiverId)) {
+      if (user && user.friends && user.friends.includes(receiverId)) {
         return res.status(400).json({ message: 'Already friends with this user' });
       }
       
@@ -842,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if users are friends
       const currentUser = await storage.getUser(currentUserId);
-      if (!currentUser?.friends.includes(otherUserId)) {
+      if (!currentUser || !currentUser.friends || !currentUser.friends.includes(otherUserId)) {
         return res.status(403).json({ message: 'You can only message your friends' });
       }
       
@@ -926,7 +926,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Verify that the sender and receiver are friends
             const sender = await storage.getUser(userId);
-            if (!sender || !sender.friends.includes(receiverId)) {
+            if (!sender || !sender.friends || !sender.friends.includes(receiverId)) {
               ws.send(JSON.stringify({
                 type: 'error',
                 error: 'You can only send messages to your friends'
