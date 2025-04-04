@@ -105,6 +105,12 @@ export const TopNavbar = () => {
                 isActive={location === "/friends"}
               />
               <NavItem
+                href="/chat"
+                icon="fa-comment"
+                label="Chat"
+                isActive={location.startsWith("/chat")}
+              />
+              <NavItem
                 href="/profile"
                 icon="fa-user"
                 label="Profile"
@@ -195,6 +201,13 @@ export const TopNavbar = () => {
               icon="fa-user-friends"
               label="Friends"
               isActive={location === "/friends"}
+              onClick={closeMobileMenu}
+            />
+            <NavItem
+              href="/chat"
+              icon="fa-comment"
+              label="Chat"
+              isActive={location.startsWith("/chat")}
               onClick={closeMobileMenu}
             />
             <NavItem

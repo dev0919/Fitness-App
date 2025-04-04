@@ -22,7 +22,6 @@ import Chat from "@/pages/Chat";
 import { FitConnectLayout } from "@/components/layout/FitConnectLayout";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { WebSocketProvider } from "@/hooks/use-websocket";
 import { WakuProvider } from "@/hooks/use-waku";
 
 // Define authenticated routes that require login
@@ -35,7 +34,8 @@ const authenticatedRoutes = [
   "/profile",
   "/edit-profile",
   "/settings",
-  "/friends"
+  "/friends",
+  "/chat"
 ];
 
 function Router() {
@@ -204,10 +204,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <WakuProvider>
-          <WebSocketProvider>
-            <Router />
-            <Toaster />
-          </WebSocketProvider>
+          <Router />
+          <Toaster />
         </WakuProvider>
       </AuthProvider>
     </QueryClientProvider>
