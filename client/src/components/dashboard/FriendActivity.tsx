@@ -107,9 +107,9 @@ export const FriendActivity = ({ activities }: FriendActivityProps) => {
           </p>
         </div>
         <Link href="/community">
-          <a className="text-sm text-[#4CAF50] hover:text-[#388E3C]">
+          <div className="text-sm text-[#4CAF50] hover:text-[#388E3C] cursor-pointer">
             View all
-          </a>
+          </div>
         </Link>
       </div>
       <div className="bg-white">
@@ -120,13 +120,13 @@ export const FriendActivity = ({ activities }: FriendActivityProps) => {
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <Link href={`/profile/${user.id}`}>
-                      <a>
+                      <div className="cursor-pointer">
                         <img 
                           className="h-10 w-10 rounded-full object-cover" 
                           src={user.profileImage || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName || ''}&background=random`} 
                           alt={`${user.firstName} ${user.lastName || ''}`}
                         />
-                      </a>
+                      </div>
                     </Link>
                   </div>
                   <div className="ml-3 flex-1">
