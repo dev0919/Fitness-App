@@ -73,24 +73,25 @@ export default function FriendsPage() {
     enabled: searchActive, // Only run the query when search is active
   });
 
-  // Add friend mutation
-  const addFriendMutation = useMutation({
-    mutationFn: async (friendId: number) => {
-      return apiRequest("POST", `/api/friends/add/${friendId}`);
+  // Send friend request mutation
+  const sendFriendRequestMutation = useMutation({
+    mutationFn: async (receiverId: number) => {
+      return apiRequest("POST", "/api/friend-requests", { receiverId });
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Friend added successfully",
+        description: "Friend request sent successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/friends"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/friend-requests/pending"] });
       setSearchActive(false);
       setFriendCode("");
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add friend",
+        description: error.message || "Failed to send friend request",
         variant: "destructive",
       });
     },
@@ -131,8 +132,8 @@ export default function FriendsPage() {
     searchUser();
   };
 
-  const handleAddFriend = (friendId: number) => {
-    addFriendMutation.mutate(friendId);
+  const handleSendFriendRequest = (friendId: number) => {
+    sendFriendRequestMutation.mutate(friendId);
   };
 
   const handleRemoveFriend = (friendId: number) => {
@@ -263,15 +264,15 @@ export default function FriendsPage() {
                       </div>
                     ) : (
                       <Button 
-                        onClick={() => handleAddFriend(foundUser.id)}
-                        disabled={addFriendMutation.isPending}
+                        onClick={() => handleSendFriendRequest(foundUser.id)}
+                        disabled={sendFriendRequestMutation.isPending}
                       >
-                        {addFriendMutation.isPending ? (
+                        {sendFriendRequestMutation.isPending ? (
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         ) : (
                           <UserPlus className="h-4 w-4 mr-2" />
                         )}
-                        Add Friend
+                        Send Friend Request
                       </Button>
                     )}
                   </div>

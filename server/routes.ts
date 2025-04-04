@@ -243,34 +243,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  apiRouter.post('/friends/add/:friendId', isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const friendId = parseInt(req.params.friendId);
-      
-      // Check if friendId is valid
-      const friend = await storage.getUser(friendId);
-      if (!friend) {
-        return res.status(404).json({ message: 'Friend not found' });
-      }
-      
-      // Check if trying to add yourself
-      if (userId === friendId) {
-        return res.status(400).json({ message: 'Cannot add yourself as a friend' });
-      }
-      
-      const updatedUser = await storage.addFriend(userId, friendId);
-      if (!updatedUser) {
-        return res.status(500).json({ message: 'Failed to add friend' });
-      }
-      
-      // Don't return the password
-      const { password, ...userWithoutPassword } = updatedUser;
-      res.json(userWithoutPassword);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
+  // apiRouter.post('/friends/add/:friendId', isAuthenticated, async (req, res) => {
+  //   Endpoint has been disabled - friends must be added through friend requests now
+  // });
   
   apiRouter.delete('/friends/remove/:friendId', isAuthenticated, async (req, res) => {
     try {
