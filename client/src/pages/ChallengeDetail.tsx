@@ -318,11 +318,33 @@ const ChallengeDetail = () => {
                         <span className="text-sm text-[#616161]">Completion</span>
                         <span className="text-sm font-medium text-[#212121]">{userParticipation.progress}%</span>
                       </div>
-                      <div className="w-full bg-[#E0E0E0] rounded-full h-2.5">
+                      <div className="relative w-full bg-[#E0E0E0] rounded-full h-4">
                         <div 
-                          className="bg-[#4CAF50] h-2.5 rounded-full" 
+                          className="bg-gradient-to-r from-green-400 to-green-600 h-4 rounded-full transition-all duration-500 ease-in-out" 
                           style={{ width: `${userParticipation.progress}%` }}
                         ></div>
+                        {/* Challenge Goal Markers */}
+                        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-between px-1">
+                          {[25, 50, 75].map((milestone) => (
+                            <div 
+                              key={milestone}
+                              className={`h-6 w-0.5 ${userParticipation.progress >= milestone ? 'bg-white' : 'bg-gray-400'} relative`}
+                              style={{ left: `${milestone}%`, marginLeft: '-1px' }}
+                            >
+                              <div className={`absolute -top-7 left-1/2 transform -translate-x-1/2 text-xs ${userParticipation.progress >= milestone ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                                {milestone}%
+                              </div>
+                            </div>
+                          ))}
+                          <div 
+                            className={`h-6 w-0.5 ${userParticipation.progress >= 100 ? 'bg-white' : 'bg-gray-400'} relative`}
+                            style={{ left: '100%', marginLeft: '-1px' }}
+                          >
+                            <div className={`absolute -top-7 left-1/2 transform -translate-x-1/2 text-xs ${userParticipation.progress >= 100 ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                              100%
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
@@ -340,34 +362,91 @@ const ChallengeDetail = () => {
                           </p>
                         </div>
                         
-                        <div>
-                          <label className="block text-sm text-[#616161] mb-2">Update Progress</label>
-                          <div className="flex">
-                            <input 
-                              type="number" 
-                              min="0"
-                              max="100"
-                              className="flex-1 p-2 border border-[#E0E0E0] rounded-l-md focus:outline-none focus:ring-1 focus:ring-[#4CAF50]"
-                              placeholder="Enter % complete"
-                              defaultValue={userParticipation.progress}
-                            />
-                            <button
-                              onClick={() => {
-                                const input = document.querySelector('input[type="number"]') as HTMLInputElement;
-                                const progress = parseInt(input.value);
-                                if (progress >= 0 && progress <= 100) {
-                                  updateProgress.mutate(progress);
-                                }
-                              }}
-                              disabled={updateProgress.isPending}
-                              className="px-4 py-2 bg-[#4CAF50] text-white rounded-r-md hover:bg-[#388E3C] disabled:opacity-75"
-                            >
-                              {updateProgress.isPending ? '...' : 'Update'}
-                            </button>
+                        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                          <label className="block text-sm font-medium text-[#424242] mb-2">Update Progress</label>
+                          <div className="space-y-4">
+                            {/* Progress Slider */}
+                            <div>
+                              <input 
+                                type="range" 
+                                min="0"
+                                max="100"
+                                step="5"
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                                defaultValue={userParticipation.progress}
+                                id="progress-slider"
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  document.getElementById('progress-value')!.textContent = value;
+                                  document.getElementById('progress-number-input')!.value = value;
+                                }}
+                              />
+                              <div className="flex justify-between mt-1">
+                                <span className="text-xs text-gray-500">0%</span>
+                                <span id="progress-value" className="text-sm font-medium text-green-600">{userParticipation.progress}%</span>
+                                <span className="text-xs text-gray-500">100%</span>
+                              </div>
+                            </div>
+                            
+                            {/* Numeric Input and Update Button */}
+                            <div className="flex mt-2">
+                              <input 
+                                id="progress-number-input"
+                                type="number" 
+                                min="0"
+                                max="100"
+                                className="w-20 p-2 border border-[#E0E0E0] rounded-l-md focus:outline-none focus:ring-1 focus:ring-[#4CAF50] text-center"
+                                placeholder="0-100"
+                                defaultValue={userParticipation.progress}
+                                onChange={(e) => {
+                                  const input = e.target as HTMLInputElement;
+                                  const value = parseInt(input.value);
+                                  if (!isNaN(value) && value >= 0 && value <= 100) {
+                                    document.getElementById('progress-slider')!.value = input.value;
+                                    document.getElementById('progress-value')!.textContent = input.value + "%";
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={() => {
+                                  const input = document.getElementById('progress-number-input') as HTMLInputElement;
+                                  const progress = parseInt(input.value);
+                                  if (progress >= 0 && progress <= 100) {
+                                    updateProgress.mutate(progress);
+                                  }
+                                }}
+                                disabled={updateProgress.isPending}
+                                className="flex-1 px-4 py-2 bg-[#4CAF50] text-white rounded-r-md hover:bg-[#388E3C] disabled:opacity-75 flex items-center justify-center"
+                              >
+                                {updateProgress.isPending ? (
+                                  <>
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Updating...
+                                  </>
+                                ) : 'Save Progress'}
+                              </button>
+                            </div>
+                            
+                            {/* Quick Milestone Buttons */}
+                            <div className="grid grid-cols-4 gap-2 mt-2">
+                              {[25, 50, 75, 100].map((milestone) => (
+                                <button
+                                  key={milestone}
+                                  onClick={() => {
+                                    document.getElementById('progress-slider')!.value = milestone.toString();
+                                    document.getElementById('progress-value')!.textContent = milestone + "%";
+                                    document.getElementById('progress-number-input')!.value = milestone.toString();
+                                  }}
+                                  className={`py-1 text-xs border rounded-md ${userParticipation.progress >= milestone ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600'} hover:bg-green-100`}
+                                >
+                                  {milestone}%
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          <p className="text-xs text-[#9E9E9E] mt-1">
-                            Enter a value between 0-100%
-                          </p>
                         </div>
                       </div>
                     ) : challengeStatus === "upcoming" ? (

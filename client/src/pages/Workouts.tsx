@@ -106,60 +106,134 @@ const Workouts = () => {
       </div>
       
       {/* Workouts list */}
-      <div className="bg-white shadow rounded-lg">
-        {workouts && workouts.length > 0 ? (
-          <ul className="divide-y divide-[#E0E0E0]">
-            {workouts.map((workout: any) => (
-              <li key={workout.id}>
-                <Link href={`/workouts/${workout.id}`} className="block hover:bg-[#F5F5F5]">
-                  <div className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className={`flex-shrink-0 h-12 w-12 rounded-full bg-[#81C784] flex items-center justify-center`}>
-                        <i className={`fas ${getWorkoutIcon(workout.type)} text-[#4CAF50] text-xl`}></i>
-                      </div>
-                      <div className="ml-4 flex-grow">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-medium text-[#212121]">{workout.title}</h3>
-                            <div className="flex items-center text-sm text-[#616161] mt-1">
-                              <span className="mr-3">{formatWorkoutDate(workout.createdAt)}</span>
-                              <span className="mr-3">
-                                <i className="far fa-clock mr-1"></i> {formatDuration(workout.duration)}
-                              </span>
-                              {workout.distance && (
-                                <span className="mr-3">
-                                  <i className="fas fa-route mr-1"></i> {(workout.distance / 1000).toFixed(1)} km
-                                </span>
-                              )}
-                              {workout.caloriesBurned && (
-                                <span>
-                                  <i className="fas fa-fire mr-1"></i> {workout.caloriesBurned} cal
-                                </span>
-                              )}
+      {workouts && workouts.length > 0 ? (
+        <div className="space-y-8">
+          {/* Active Workouts Section */}
+          <div>
+            <h3 className="text-xl font-semibold text-[#212121] mb-4">Active Workouts</h3>
+            <div className="bg-white shadow rounded-lg">
+              {workouts.filter((workout: any) => !workout.completed).length > 0 ? (
+                <ul className="divide-y divide-[#E0E0E0]">
+                  {workouts
+                    .filter((workout: any) => !workout.completed)
+                    .map((workout: any) => (
+                      <li key={workout.id}>
+                        <Link href={`/workouts/${workout.id}`} className="block hover:bg-[#F5F5F5]">
+                          <div className="px-6 py-4">
+                            <div className="flex items-center">
+                              <div className={`flex-shrink-0 h-12 w-12 rounded-full bg-[#FFECB3] flex items-center justify-center`}>
+                                <i className={`fas ${getWorkoutIcon(workout.type)} text-[#FFA000] text-xl`}></i>
+                              </div>
+                              <div className="ml-4 flex-grow">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h3 className="text-lg font-medium text-[#212121]">{workout.title}</h3>
+                                    <div className="flex flex-wrap items-center text-sm text-[#616161] mt-1">
+                                      <span className="mr-3 mb-1">{formatWorkoutDate(workout.createdAt)}</span>
+                                      <span className="mr-3 mb-1">
+                                        <i className="far fa-clock mr-1"></i> {formatDuration(workout.duration)}
+                                      </span>
+                                      {workout.distance && (
+                                        <span className="mr-3 mb-1">
+                                          <i className="fas fa-route mr-1"></i> {(workout.distance / 1000).toFixed(1)} km
+                                        </span>
+                                      )}
+                                      {workout.caloriesBurned && (
+                                        <span className="mb-1">
+                                          <i className="fas fa-fire mr-1"></i> {workout.caloriesBurned} cal
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 mr-3">In Progress</span>
+                                    <i className="fas fa-chevron-right text-[#9E9E9E]"></i>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                          <i className="fas fa-chevron-right text-[#9E9E9E]"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="py-10 text-center">
-            <div className="h-16 w-16 mx-auto bg-[#F5F5F5] rounded-full flex items-center justify-center mb-4">
-              <i className="fas fa-dumbbell text-[#9E9E9E] text-2xl"></i>
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              ) : (
+                <div className="py-6 text-center">
+                  <p className="text-[#616161]">No active workouts</p>
+                </div>
+              )}
             </div>
-            <h3 className="text-lg font-medium text-[#212121]">No workouts yet</h3>
-            <p className="text-[#616161] mt-1">Start tracking your fitness activities</p>
-            <Link href="/workouts/new" className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C]">
-              <PlusCircle className="w-4 h-4 mr-2" /> Add First Workout
-            </Link>
           </div>
-        )}
-      </div>
+
+          {/* Completed Workouts Section */}
+          <div>
+            <h3 className="text-xl font-semibold text-[#212121] mb-4">Completed Workouts</h3>
+            <div className="bg-white shadow rounded-lg">
+              {workouts.filter((workout: any) => workout.completed).length > 0 ? (
+                <ul className="divide-y divide-[#E0E0E0]">
+                  {workouts
+                    .filter((workout: any) => workout.completed)
+                    .map((workout: any) => (
+                      <li key={workout.id}>
+                        <Link href={`/workouts/${workout.id}`} className="block hover:bg-[#F5F5F5]">
+                          <div className="px-6 py-4">
+                            <div className="flex items-center">
+                              <div className={`flex-shrink-0 h-12 w-12 rounded-full bg-[#81C784] flex items-center justify-center`}>
+                                <i className={`fas ${getWorkoutIcon(workout.type)} text-[#4CAF50] text-xl`}></i>
+                              </div>
+                              <div className="ml-4 flex-grow">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h3 className="text-lg font-medium text-[#212121]">{workout.title}</h3>
+                                    <div className="flex flex-wrap items-center text-sm text-[#616161] mt-1">
+                                      <span className="mr-3 mb-1">{formatWorkoutDate(workout.createdAt)}</span>
+                                      <span className="mr-3 mb-1">
+                                        <i className="far fa-clock mr-1"></i> {formatDuration(workout.duration)}
+                                      </span>
+                                      {workout.distance && (
+                                        <span className="mr-3 mb-1">
+                                          <i className="fas fa-route mr-1"></i> {(workout.distance / 1000).toFixed(1)} km
+                                        </span>
+                                      )}
+                                      {workout.caloriesBurned && (
+                                        <span className="mb-1">
+                                          <i className="fas fa-fire mr-1"></i> {workout.caloriesBurned} cal
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 mr-3">Completed</span>
+                                    <i className="fas fa-chevron-right text-[#9E9E9E]"></i>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              ) : (
+                <div className="py-6 text-center">
+                  <p className="text-[#616161]">No completed workouts</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white shadow rounded-lg py-10 text-center">
+          <div className="h-16 w-16 mx-auto bg-[#F5F5F5] rounded-full flex items-center justify-center mb-4">
+            <i className="fas fa-dumbbell text-[#9E9E9E] text-2xl"></i>
+          </div>
+          <h3 className="text-lg font-medium text-[#212121]">No workouts yet</h3>
+          <p className="text-[#616161] mt-1">Start tracking your fitness activities</p>
+          <Link href="/workouts/new" className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C]">
+            <PlusCircle className="w-4 h-4 mr-2" /> Add First Workout
+          </Link>
+        </div>
+      )}
     </div>
   );
 };
