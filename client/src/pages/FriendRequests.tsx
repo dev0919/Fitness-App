@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, UserMinus, MessageCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useQuery } from "@tanstack/react-query";
+import { User } from "@shared/schema";
 
 export default function FriendRequestsPage() {
   const [_, navigate] = useLocation();
@@ -32,6 +34,21 @@ export default function FriendRequestsPage() {
   } = useFriendRequests();
   
   const [friendCode, setFriendCode] = useState("");
+  
+  // Fetch friends list
+  const {
+    data: friends,
+    isLoading: isLoadingFriends,
+  } = useQuery<User[]>({
+    queryKey: ["/api/friends"],
+    queryFn: async () => {
+      const res = await fetch("/api/friends");
+      if (!res.ok) {
+        throw new Error("Failed to fetch friends");
+      }
+      return res.json();
+    },
+  });
   
   const handleFindFriend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +75,10 @@ export default function FriendRequestsPage() {
   
   const handleGoToFriends = () => {
     navigate("/friends");
+  };
+  
+  const handleGoToChat = (friendId: number) => {
+    navigate(`/chat/${friendId}`);
   };
   
   return (
@@ -159,16 +180,37 @@ export default function FriendRequestsPage() {
                           >
                             Cancel
                           </Button>
-                          <Button 
-                            onClick={handleSendRequest}
-                            disabled={isSendingRequest}
-                          >
-                            {isSendingRequest ? (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                              "Send Friend Request"
-                            )}
-                          </Button>
+                          
+                          {friends && findByFriendCodeResult && friends.some(friend => friend.id === findByFriendCodeResult.id) ? (
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleGoToChat(findByFriendCodeResult.id)}
+                              >
+                                <MessageCircle className="h-4 w-4 mr-2" />
+                                Message
+                              </Button>
+                              <Button 
+                                variant="secondary" 
+                                size="sm" 
+                                onClick={() => navigate(`/profile/${findByFriendCodeResult.id}`)}
+                              >
+                                View Profile
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button 
+                              onClick={handleSendRequest}
+                              disabled={isSendingRequest}
+                            >
+                              {isSendingRequest ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                "Send Friend Request"
+                              )}
+                            </Button>
+                          )}
                         </CardFooter>
                       </Card>
                     </div>

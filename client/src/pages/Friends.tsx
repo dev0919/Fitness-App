@@ -229,17 +229,51 @@ export default function FriendsPage() {
                         </p>
                       </div>
                     </div>
-                    <Button 
-                      onClick={() => handleAddFriend(foundUser.id)}
-                      disabled={addFriendMutation.isPending}
-                    >
-                      {addFriendMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <UserPlus className="h-4 w-4 mr-2" />
-                      )}
-                      Add Friend
-                    </Button>
+                    {currentUser && friends && friends.some(friend => friend.id === foundUser.id) ? (
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleGoToChat(foundUser.id)}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Message
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRemoveFriend(foundUser.id)}
+                          disabled={removeFriendMutation.isPending}
+                        >
+                          {removeFriendMutation.isPending &&
+                            removeFriendMutation.variables === foundUser.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          ) : (
+                            <UserMinus className="h-4 w-4 mr-2" />
+                          )}
+                          Remove
+                        </Button>
+                        <Button 
+                          variant="secondary" 
+                          size="sm" 
+                          onClick={() => navigate(`/profile/${foundUser.id}`)}
+                        >
+                          View Profile
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        onClick={() => handleAddFriend(foundUser.id)}
+                        disabled={addFriendMutation.isPending}
+                      >
+                        {addFriendMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <UserPlus className="h-4 w-4 mr-2" />
+                        )}
+                        Add Friend
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
