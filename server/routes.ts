@@ -25,14 +25,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Session setup
   app.use(session({
     secret: 'fitconnect-secret-key',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     store: new Session({
       checkPeriod: 86400000 // prune expired entries every 24h
     }),
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // set to false for development
       httpOnly: true,
       sameSite: 'lax',
       path: '/'
@@ -45,15 +45,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   passport.use(new LocalStrategy(async (username, password, done) => {
     try {
+      console.log(`Attempting to authenticate user: ${username}`);
       const user = await storage.getUserByUsername(username);
       if (!user) {
+        console.log(`User not found: ${username}`);
         return done(null, false, { message: 'Incorrect username.' });
       }
+      console.log(`User found: ${username}, checking password`);
+      
       if (user.password !== password) { // In real app, use proper password hashing
+        console.log(`Password incorrect for user: ${username}`);
         return done(null, false, { message: 'Incorrect password.' });
       }
+      
+      console.log(`Authentication successful for user: ${username}`);
       return done(null, user);
     } catch (err) {
+      console.error(`Authentication error for user ${username}:`, err);
       return done(err);
     }
   }));
@@ -124,17 +132,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.post('/auth/login', passport.authenticate('local'), (req, res) => {
-    // Remove password from response
-    const { password, ...userWithoutPassword } = req.user as any;
+  apiRouter.post('/auth/login', (req, res, next) => {
+    console.log('Login attempt:', req.body);
     
-    // Force the session to be saved before response
-    req.session.save((err) => {
+    passport.authenticate('local', (err, user, info) => {
       if (err) {
-        return res.status(500).json({ message: 'Error saving session' });
+        console.error('Login error:', err);
+        return res.status(500).json({ message: 'Internal server error during login' });
       }
-      res.json(userWithoutPassword);
-    });
+      
+      if (!user) {
+        console.log('Login failed:', info.message);
+        return res.status(401).json({ message: info.message || 'Authentication failed' });
+      }
+      
+      console.log('User authenticated, logging in:', user.username);
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Error during login:', err);
+          return res.status(500).json({ message: 'Error during login' });
+        }
+        
+        // Remove password from response
+        const { password, ...userWithoutPassword } = user;
+        
+        // Force the session to be saved before response
+        console.log('Saving session...');
+        req.session.save((err) => {
+          if (err) {
+            console.error('Error saving session:', err);
+            return res.status(500).json({ message: 'Error saving session' });
+          }
+          console.log('Session saved, sending response');
+          res.json(userWithoutPassword);
+        });
+      });
+    })(req, res, next);
   });
 
   apiRouter.post('/auth/logout', (req, res) => {
@@ -146,7 +179,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  apiRouter.get('/auth/me', isAuthenticated, (req, res) => {
+  apiRouter.get('/auth/me', (req, res) => {
+    console.log('Auth/me request, isAuthenticated:', req.isAuthenticated());
+    console.log('Session ID:', req.sessionID);
+    console.log('Session data:', req.session);
+    
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    
     // Remove password from response
     const { password, ...userWithoutPassword } = req.user as any;
     res.json(userWithoutPassword);
