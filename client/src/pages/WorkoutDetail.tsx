@@ -1,17 +1,130 @@
-import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
-import { Workout } from "@shared/schema";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useParams, Link, useLocation } from "wouter";
+import { ArrowLeft, Edit, Trash2, Save, X } from "lucide-react";
+import { Workout, insertWorkoutSchema } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useForm } from "react-hook-form";
+import React, { useState, useEffect } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+
+// Create a form schema by extending insertWorkoutSchema and making userId optional
+const workoutFormSchema = insertWorkoutSchema.omit({ userId: true });
+type WorkoutFormValues = z.infer<typeof workoutFormSchema>;
 
 const WorkoutDetail = () => {
   const { id } = useParams();
+  const [, navigate] = useLocation();
   const workoutId = parseInt(id || "0");
+  const [isEditing, setIsEditing] = useState(false);
+  const { toast } = useToast();
 
   // Fetch workout data
   const { data: workout, isLoading } = useQuery<Workout>({
     queryKey: [`/api/workouts/${workoutId}`],
     enabled: !!workoutId,
   });
+  
+  // Setup form
+  const form = useForm<WorkoutFormValues>({
+    resolver: zodResolver(workoutFormSchema),
+    defaultValues: {
+      title: "",
+      type: "run",
+      duration: 0,
+      distance: 0,
+      caloriesBurned: 0,
+      description: "",
+      completed: true,
+    },
+  });
+  
+  // Update form values when workout data is loaded
+  useEffect(() => {
+    if (workout) {
+      form.reset({
+        title: workout.title,
+        type: workout.type,
+        duration: workout.duration,
+        distance: workout.distance || 0,
+        caloriesBurned: workout.caloriesBurned || 0,
+        description: workout.description || "",
+        completed: workout.completed,
+      });
+    }
+  }, [workout, form]);
+  
+  // Mutation for updating workout
+  const updateWorkout = useMutation({
+    mutationFn: async (data: WorkoutFormValues) => {
+      return await apiRequest(
+        "PATCH", 
+        `/api/workouts/${workoutId}`, 
+        data
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/workouts/${workoutId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/workouts"] });
+      setIsEditing(false);
+      toast({
+        title: "Workout updated",
+        description: "Your workout has been updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error("Error updating workout:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update workout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation for deleting workout
+  const deleteWorkout = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(
+        "DELETE", 
+        `/api/workouts/${workoutId}`,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workouts"] });
+      navigate("/workouts");
+      toast({
+        title: "Workout deleted",
+        description: "Your workout has been deleted successfully",
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting workout:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete workout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Form submission handler
+  const onSubmit = (data: WorkoutFormValues) => {
+    updateWorkout.mutate(data);
+  };
+  
+  // Confirm delete handler
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this workout? This action cannot be undone.")) {
+      deleteWorkout.mutate();
+    }
+  };
 
   // Helper functions
   const formatDate = (dateString: string | Date) => {
@@ -145,57 +258,273 @@ const WorkoutDetail = () => {
             </div>
           </div>
           <div className="md:ml-auto flex space-x-2">
-            <button className="p-2 text-[#2196F3] hover:bg-[#E3F2FD] rounded-full">
-              <Edit className="h-5 w-5" />
-            </button>
-            <button className="p-2 text-[#F44336] hover:bg-[#FFEBEE] rounded-full">
-              <Trash2 className="h-5 w-5" />
-            </button>
+            {isEditing ? (
+              <>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => setIsEditing(false)}
+                  className="flex items-center gap-1 text-[#F44336]"
+                >
+                  <X className="h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button 
+                  type="button"
+                  size="sm" 
+                  onClick={form.handleSubmit(onSubmit)}
+                  disabled={updateWorkout.isPending}
+                  className="flex items-center gap-1 bg-[#4CAF50] hover:bg-[#388E3C]"
+                >
+                  {updateWorkout.isPending ? 'Saving...' : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Save
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-1 text-[#2196F3]"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDelete}
+                  disabled={deleteWorkout.isPending}
+                  className="flex items-center gap-1 text-[#F44336]"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteWorkout.isPending ? 'Deleting...' : 'Delete'}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Workout details */}
-      <div className="bg-white shadow rounded-lg overflow-hidden mb-6">
-        <div className="border-b border-[#E0E0E0] px-6 py-4">
-          <h4 className="text-[#616161] text-sm font-medium">WORKOUT DETAILS</h4>
-        </div>
-        <div className="px-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm text-[#9E9E9E]">Date</p>
-              <p className="text-[#212121] font-medium">{formatDate(workout.createdAt)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-[#9E9E9E]">Duration</p>
-              <p className="text-[#212121] font-medium">{formatDuration(workout.duration)}</p>
-            </div>
-            {workout.distance && (
-              <div>
-                <p className="text-sm text-[#9E9E9E]">Distance</p>
-                <p className="text-[#212121] font-medium">{(workout.distance / 1000).toFixed(2)} kilometers</p>
-              </div>
-            )}
-            {workout.caloriesBurned && (
-              <div>
-                <p className="text-sm text-[#9E9E9E]">Calories Burned</p>
-                <p className="text-[#212121] font-medium">{workout.caloriesBurned} kcal</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Description section */}
-      {workout.description && (
-        <div className="bg-white shadow rounded-lg overflow-hidden">
+      {/* Workout details - Edit mode and View mode */}
+      {isEditing ? (
+        <div className="bg-white shadow rounded-lg overflow-hidden mb-6">
           <div className="border-b border-[#E0E0E0] px-6 py-4">
-            <h4 className="text-[#616161] text-sm font-medium">DESCRIPTION</h4>
+            <h4 className="text-[#616161] text-sm font-medium">EDIT WORKOUT</h4>
           </div>
           <div className="px-6 py-4">
-            <p className="text-[#212121] whitespace-pre-line">{workout.description}</p>
+            <Form {...form}>
+              <form className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Workout Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter workout title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select workout type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="run">Running</SelectItem>
+                            <SelectItem value="strength">Strength Training</SelectItem>
+                            <SelectItem value="cycling">Cycling</SelectItem>
+                            <SelectItem value="swimming">Swimming</SelectItem>
+                            <SelectItem value="yoga">Yoga</SelectItem>
+                            <SelectItem value="hiking">Hiking</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="duration"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duration (minutes)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="distance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Distance (meters)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            {...field} 
+                            onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="caloriesBurned"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Calories Burned</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            {...field} 
+                            onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Add workout notes or details" 
+                          className="min-h-[120px]" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="completed"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="h-4 w-4 text-[#4CAF50] border-gray-300 rounded"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Mark as completed</FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </form>
+            </Form>
           </div>
         </div>
+      ) : (
+        <>
+          {/* Workout details */}
+          <div className="bg-white shadow rounded-lg overflow-hidden mb-6">
+            <div className="border-b border-[#E0E0E0] px-6 py-4">
+              <h4 className="text-[#616161] text-sm font-medium">WORKOUT DETAILS</h4>
+            </div>
+            <div className="px-6 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm text-[#9E9E9E]">Date</p>
+                  <p className="text-[#212121] font-medium">{formatDate(workout.createdAt)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-[#9E9E9E]">Duration</p>
+                  <p className="text-[#212121] font-medium">{formatDuration(workout.duration)}</p>
+                </div>
+                {workout.distance && (
+                  <div>
+                    <p className="text-sm text-[#9E9E9E]">Distance</p>
+                    <p className="text-[#212121] font-medium">{(workout.distance / 1000).toFixed(2)} kilometers</p>
+                  </div>
+                )}
+                {workout.caloriesBurned && (
+                  <div>
+                    <p className="text-sm text-[#9E9E9E]">Calories Burned</p>
+                    <p className="text-[#212121] font-medium">{workout.caloriesBurned} kcal</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-[#9E9E9E]">Status</p>
+                  <p className="text-[#212121] font-medium flex items-center">
+                    {workout.completed ? (
+                      <span className="flex items-center text-[#4CAF50]">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Completed
+                      </span>
+                    ) : (
+                      <span className="flex items-center text-[#FF9800]">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        In Progress
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Description section */}
+          {workout.description && (
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="border-b border-[#E0E0E0] px-6 py-4">
+                <h4 className="text-[#616161] text-sm font-medium">DESCRIPTION</h4>
+              </div>
+              <div className="px-6 py-4">
+                <p className="text-[#212121] whitespace-pre-line">{workout.description}</p>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
