@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
@@ -44,12 +45,19 @@ const Login = () => {
   const login = useMutation({
     mutationFn: async (data: LoginFormValues) => {
       setIsLoading(true);
-      return await apiRequest("POST", "/api/auth/login", data);
+      try {
+        const response = await apiRequest("POST", "/api/auth/login", data);
+        return await response.json();
+      } catch (error) {
+        setIsLoading(false);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (userData) => {
+      setIsLoading(false);
       toast({
         title: "Login successful",
-        description: "Welcome back to FitConnect!",
+        description: `Welcome back to FitConnect!`,
       });
       navigate("/dashboard");
     },
@@ -125,8 +133,8 @@ const Login = () => {
           <CardFooter className="flex flex-col space-y-2">
             <div className="text-sm text-[#616161]">
               Don't have an account?{" "}
-              <Link href="/register">
-                <a className="text-[#4CAF50] hover:underline">Register</a>
+              <Link href="/register" className="text-[#4CAF50] hover:underline">
+                Register
               </Link>
             </div>
           </CardFooter>

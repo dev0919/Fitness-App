@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
@@ -60,8 +61,9 @@ const Register = () => {
       
       try {
         const response = await apiRequest("POST", "/api/auth/register", registerData);
-        return response;
+        return await response.json();
       } catch (error: any) {
+        setIsLoading(false);
         // Extract error message from API response if available
         let errorMessage = "An error occurred during registration.";
         
@@ -87,10 +89,11 @@ const Register = () => {
         throw new Error(errorMessage);
       }
     },
-    onSuccess: () => {
+    onSuccess: (userData) => {
+      setIsLoading(false);
       toast({
         title: "Registration successful",
-        description: "Welcome to FitConnect!",
+        description: `Welcome to FitConnect, ${userData.firstName}!`,
       });
       navigate("/dashboard");
     },
@@ -224,8 +227,8 @@ const Register = () => {
           <CardFooter className="flex flex-col space-y-2">
             <div className="text-sm text-[#616161]">
               Already have an account?{" "}
-              <Link href="/login">
-                <a className="text-[#4CAF50] hover:underline">Login</a>
+              <Link href="/login" className="text-[#4CAF50] hover:underline">
+                Login
               </Link>
             </div>
           </CardFooter>

@@ -56,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
     },
+    refetchOnWindowFocus: false,
+    retry: false,
   });
 
   const loginMutation = useMutation<User, Error, LoginData>({
