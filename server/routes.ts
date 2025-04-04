@@ -1064,6 +1064,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'completed'
       });
       
+      // Deduct tokens from user's wallet
+      const newBalance = (BigInt(wallet.balance) - totalCost).toString();
+      await storage.updateTokenWallet(userId, newBalance);
+      
+      // Create a transaction record for this purchase
+      await storage.createTokenTransaction({
+        userId,
+        amount: '-' + totalCost.toString(),
+        type: 'purchase',
+        relatedId: purchase.id,
+        status: 'completed',
+        txHash: null, 
+        description: `Purchase: ${item.name} (${quantity})`
+      });
+      
       res.status(201).json(purchase);
     } catch (error) {
       if (error instanceof z.ZodError) {

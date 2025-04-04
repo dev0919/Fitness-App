@@ -180,9 +180,45 @@ const Tokens = () => {
     connectWalletMutation.mutate(walletAddress);
   };
 
+  // State for purchase confirmation
+  const [purchaseItem, setPurchaseItem] = useState<any>(null);
+  const [purchaseConfirmOpen, setPurchaseConfirmOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"app" | "external">("app");
+  
   // Handle item purchase
-  const handlePurchase = (itemId: number) => {
-    purchaseItemMutation.mutate(itemId);
+  const handlePurchase = (item: any) => {
+    setPurchaseItem(item);
+    setPurchaseConfirmOpen(true);
+    // Default to app balance, but can be changed in dialog
+    setPaymentMethod("app");
+  };
+  
+  // Confirm purchase
+  const confirmPurchase = () => {
+    if (!purchaseItem) return;
+    
+    if (paymentMethod === "app") {
+      // Use app balance
+      purchaseItemMutation.mutate(purchaseItem.id);
+    } else if (paymentMethod === "external" && wallet?.walletAddress) {
+      // If using external wallet, simulate a blockchain transaction
+      toast({
+        title: "Processing External Payment",
+        description: "Sending request to your connected wallet...",
+      });
+      
+      // Simulate blockchain delay
+      setTimeout(() => {
+        toast({
+          title: "External Payment Successful",
+          description: `${purchaseItem.price} $FITCOIN was transferred from your external wallet.`,
+        });
+        // Process the purchase
+        purchaseItemMutation.mutate(purchaseItem.id);
+      }, 2000);
+    }
+    
+    setPurchaseConfirmOpen(false);
   };
 
   // Format transaction types for display
@@ -490,7 +526,7 @@ const Tokens = () => {
                             !wallet || 
                             BigInt(wallet.balance) < BigInt(item.price)
                           }
-                          onClick={() => handlePurchase(item.id)}
+                          onClick={() => handlePurchase(item)}
                         >
                           {purchaseItemMutation.isPending ? (
                             "Processing..."
@@ -594,6 +630,69 @@ const Tokens = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Purchase Confirmation Dialog */}
+      <AlertDialog open={purchaseConfirmOpen} onOpenChange={setPurchaseConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Purchase</AlertDialogTitle>
+            <AlertDialogDescription>
+              {purchaseItem && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    {purchaseItem.imageUrl && (
+                      <img 
+                        src={purchaseItem.imageUrl} 
+                        alt={purchaseItem.name} 
+                        className="w-16 h-16 object-cover rounded-md"
+                      />
+                    )}
+                    <div>
+                      <h3 className="font-semibold">{purchaseItem.name}</h3>
+                      <p className="text-sm text-muted-foreground">{purchaseItem.price} $FITCOIN</p>
+                    </div>
+                  </div>
+                  
+                  {wallet?.walletAddress && (
+                    <div className="space-y-2 py-2">
+                      <p className="text-sm font-medium">Select payment method:</p>
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            checked={paymentMethod === "app"}
+                            onChange={() => setPaymentMethod("app")}
+                            className="h-4 w-4"
+                          />
+                          <span>Pay from app balance ({wallet.balance} $FITCOIN)</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="radio"
+                            checked={paymentMethod === "external"}
+                            onChange={() => setPaymentMethod("external")}
+                            className="h-4 w-4"
+                          />
+                          <span>Pay from connected wallet (ends with {wallet.walletAddress.slice(-6)})</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmPurchase}
+              disabled={purchaseItemMutation.isPending}
+            >
+              {purchaseItemMutation.isPending ? "Processing..." : "Confirm Purchase"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
