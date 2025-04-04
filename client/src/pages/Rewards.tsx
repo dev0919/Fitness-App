@@ -54,7 +54,7 @@ const Rewards = () => {
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sortOrder, setSortOrder] = useState<"price-asc" | "price-desc">("price-asc");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -155,7 +155,7 @@ const Rewards = () => {
     }
     
     // Apply category filter
-    if (categoryFilter) {
+    if (categoryFilter && categoryFilter !== "all") {
       filtered = filtered.filter((item: any) => 
         item.category === categoryFilter
       );
@@ -258,15 +258,15 @@ const Rewards = () => {
         </div>
         
         <div className="flex gap-2">
-          <Select value={categoryFilter || ""} onValueChange={(value) => setCategoryFilter(value || null)}>
+          <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value)}>
             <SelectTrigger className="w-[180px]">
               <div className="flex items-center">
                 <Tag className="mr-2 h-4 w-4" />
-                <span>{categoryFilter ? formatCategory(categoryFilter) : "All Categories"}</span>
+                <span>{categoryFilter === "all" ? "All Categories" : formatCategory(categoryFilter)}</span>
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {getCategories().map((category: string) => (
                 <SelectItem key={category} value={category}>
                   {formatCategory(category)}
@@ -336,7 +336,7 @@ const Rewards = () => {
               variant="outline" 
               onClick={() => {
                 setSearchTerm("");
-                setCategoryFilter(null);
+                setCategoryFilter("all");
               }}
             >
               Clear Filters

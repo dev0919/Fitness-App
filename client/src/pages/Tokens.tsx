@@ -233,7 +233,7 @@ const Tokens = () => {
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6 flex items-center">
         <Coins className="mr-2 h-8 w-8" /> 
-        $FITCOIN Rewards
+        $FITCOIN Tokens & Rewards
       </h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -333,7 +333,14 @@ const Tokens = () => {
             </p>
           </CardContent>
           <CardFooter>
-            <Button variant="secondary" className="w-full" onClick={() => navigate("/rewards")}>
+            <Button 
+              variant="secondary" 
+              className="w-full" 
+              onClick={() => {
+                document.querySelector('[value="store"]')?.click();
+                window.scrollTo(0, document.querySelector('.mb-6')?.getBoundingClientRect().bottom + window.scrollY || 0);
+              }}
+            >
               Browse Rewards
             </Button>
           </CardFooter>
