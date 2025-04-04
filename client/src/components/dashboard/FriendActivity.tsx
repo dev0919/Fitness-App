@@ -2,8 +2,9 @@ import { SocialActivity, SocialInteraction } from "@shared/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { MessageCircle } from "lucide-react";
 
 type FriendActivityProps = {
   activities: {
@@ -43,6 +44,11 @@ export const FriendActivity = ({ activities }: FriendActivityProps) => {
   const { toast } = useToast();
   const [expandedCommentActivity, setExpandedCommentActivity] = useState<number | null>(null);
   const [commentText, setCommentText] = useState("");
+  const [_, navigate] = useLocation();
+  
+  const handleGoToChat = (userId: number) => {
+    navigate(`/chat/${userId}`);
+  };
   
   const handleLike = useMutation({
     mutationFn: async (activityId: number) => {
@@ -151,6 +157,13 @@ export const FriendActivity = ({ activities }: FriendActivityProps) => {
                       >
                         <i className="far fa-comment mr-1"></i>
                         <span>{interactions.comments}</span>
+                      </button>
+                      <button 
+                        onClick={() => handleGoToChat(user.id)}
+                        className="flex items-center text-sm text-[#9E9E9E] hover:text-[#4CAF50] ml-4"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        <span>Message</span>
                       </button>
                     </div>
                     
