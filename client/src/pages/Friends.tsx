@@ -6,7 +6,7 @@ import { User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useFriendRequests } from "@/hooks/use-friend-requests";
-import { FitConnectLayout } from "@/components/layout/FitConnectLayout";
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,8 +157,7 @@ export default function FriendsPage() {
   };
 
   return (
-    <FitConnectLayout>
-      <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <h1 className="text-3xl font-bold">Friends</h1>
           <div className="flex space-x-3 mt-3 sm:mt-0">
@@ -390,6 +389,5 @@ export default function FriendsPage() {
           </CardFooter>
         </Card>
       </div>
-    </FitConnectLayout>
   );
 }
