@@ -62,9 +62,9 @@ export const UpcomingChallenges = ({ challenges }: UpcomingChallengesProps) => {
             </p>
           </div>
           <Link href="/challenges">
-            <a className="text-sm text-[#4CAF50] hover:text-[#388E3C]">
+            <div className="text-sm text-[#4CAF50] hover:text-[#388E3C] cursor-pointer">
               View all
-            </a>
+            </div>
           </Link>
         </div>
         <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>

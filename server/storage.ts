@@ -312,8 +312,18 @@ export class MemStorage implements IStorage {
     }
     
     if (!user.friends.includes(friendId)) {
+      // Add friend to user's friend list
       user.friends.push(friendId);
       this.users.set(userId, user);
+      
+      // Add user to friend's friend list (make bidirectional)
+      if (!friend.friends) {
+        friend.friends = [];
+      }
+      if (!friend.friends.includes(userId)) {
+        friend.friends.push(userId);
+        this.users.set(friendId, friend);
+      }
       
       // Create a social activity for adding a friend
       await this.createSocialActivity({
@@ -329,12 +339,19 @@ export class MemStorage implements IStorage {
   
   async removeFriend(userId: number, friendId: number): Promise<User | undefined> {
     const user = await this.getUser(userId);
+    const friend = await this.getUser(friendId);
     
     if (!user || !user.friends) return undefined;
     
     // Remove friendId from user's friends list
     user.friends = user.friends.filter(id => id !== friendId);
     this.users.set(userId, user);
+    
+    // Also remove userId from friend's friends list (make bidirectional)
+    if (friend && friend.friends) {
+      friend.friends = friend.friends.filter(id => id !== userId);
+      this.users.set(friendId, friend);
+    }
     
     return user;
   }
@@ -644,10 +661,9 @@ export class MemStorage implements IStorage {
     };
     this.friendRequests.set(id, updatedRequest);
     
-    // If the request was accepted, add users as friends
+    // If the request was accepted, add users as friends (only addFriend once, as it's now bidirectional)
     if (status === "accepted") {
       await this.addFriend(request.senderId, request.receiverId);
-      await this.addFriend(request.receiverId, request.senderId);
     }
     
     return updatedRequest;
