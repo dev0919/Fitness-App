@@ -26,13 +26,13 @@ type NavItemProps = {
 const NavItem = ({ href, icon, label, isActive, onClick }: NavItemProps) => {
   return (
     <Link href={href}>
-      <a 
-        className={`flex items-center px-4 py-2 ${isActive ? 'text-[#4CAF50] font-medium' : 'text-[#616161] hover:text-[#4CAF50]'}`}
+      <div 
+        className={`flex items-center px-4 py-2 cursor-pointer ${isActive ? 'text-[#4CAF50] font-medium' : 'text-[#616161] hover:text-[#4CAF50]'}`}
         onClick={onClick}
       >
         <i className={`fas ${icon} ${isActive ? 'text-[#4CAF50]' : 'text-[#616161]'} mr-2`}></i>
         <span>{label}</span>
-      </a>
+      </div>
     </Link>
   );
 };
