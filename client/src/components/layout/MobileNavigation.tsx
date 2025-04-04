@@ -18,10 +18,10 @@ export const MobileNavigation = () => {
             <span className="text-xs mt-1">Workouts</span>
           </a>
         </Link>
-        <Link href="/community">
-          <a className={`py-3 px-4 ${location === "/community" ? "text-[#4CAF50] border-t-2 border-[#4CAF50]" : "text-[#9E9E9E] hover:text-[#4CAF50]"} flex flex-col items-center`}>
-            <i className="fas fa-users text-lg"></i>
-            <span className="text-xs mt-1">Social</span>
+        <Link href="/friends">
+          <a className={`py-3 px-4 ${location === "/friends" ? "text-[#4CAF50] border-t-2 border-[#4CAF50]" : "text-[#9E9E9E] hover:text-[#4CAF50]"} flex flex-col items-center`}>
+            <i className="fas fa-user-friends text-lg"></i>
+            <span className="text-xs mt-1">Friends</span>
           </a>
         </Link>
         <Link href="/profile">

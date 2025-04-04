@@ -149,6 +149,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // FRIEND ROUTES
+  apiRouter.get('/users/find/:friendCode', isAuthenticated, async (req, res) => {
+    try {
+      const friendCode = req.params.friendCode;
+      const user = await storage.getUserByFriendCode(friendCode);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found with this friend code' });
+      }
+      
+      // Don't return the password
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  apiRouter.get('/friends', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const friends = await storage.getFriends(userId);
+      
+      // Friends list already has passwords removed
+      res.json(friends);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  apiRouter.post('/friends/add/:friendId', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const friendId = parseInt(req.params.friendId);
+      
+      // Check if friendId is valid
+      const friend = await storage.getUser(friendId);
+      if (!friend) {
+        return res.status(404).json({ message: 'Friend not found' });
+      }
+      
+      // Check if trying to add yourself
+      if (userId === friendId) {
+        return res.status(400).json({ message: 'Cannot add yourself as a friend' });
+      }
+      
+      const updatedUser = await storage.addFriend(userId, friendId);
+      if (!updatedUser) {
+        return res.status(500).json({ message: 'Failed to add friend' });
+      }
+      
+      // Don't return the password
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  apiRouter.delete('/friends/remove/:friendId', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const friendId = parseInt(req.params.friendId);
+      
+      const updatedUser = await storage.removeFriend(userId, friendId);
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'Friend not found' });
+      }
+      
+      // Don't return the password
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
   apiRouter.patch('/users/:id', isAuthenticated, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
@@ -430,9 +507,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // SOCIAL ACTIVITY ROUTES
   apiRouter.get('/social/activities/friends', isAuthenticated, async (req, res) => {
     try {
-      // In a real app, this would get activities from user's friends
-      // For demo, we'll return activities from all users
-      const activities = await storage.getFriendActivities([1]);
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.friends || user.friends.length === 0) {
+        // If user has no friends, return empty array
+        return res.json([]);
+      }
+      
+      // Get activities from user's friends
+      const activities = await storage.getFriendActivities(user.friends);
       res.json(activities);
     } catch (error) {
       res.status(500).json({ message: 'Server error' });

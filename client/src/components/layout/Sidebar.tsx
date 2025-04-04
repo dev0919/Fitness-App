@@ -89,6 +89,12 @@ export const Sidebar = () => {
               isActive={location === "/community"}
             />
             <NavItem
+              href="/friends"
+              icon="fa-user-friends"
+              label="Friends"
+              isActive={location === "/friends"}
+            />
+            <NavItem
               href="/profile"
               icon="fa-user"
               label="Profile"

@@ -27,8 +27,12 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByFriendCode(friendCode: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
+  addFriend(userId: number, friendId: number): Promise<User | undefined>;
+  removeFriend(userId: number, friendId: number): Promise<User | undefined>;
+  getFriends(userId: number): Promise<User[]>;
   
   // Workout methods
   getWorkout(id: number): Promise<Workout | undefined>;
@@ -107,16 +111,31 @@ export class MemStorage implements IStorage {
   }
 
   private initializeData() {
-    // Create sample user
-    const user: InsertUser = {
+    // Create first sample user
+    const user1: InsertUser = {
       username: 'alex',
       email: 'alex@example.com',
       password: 'password123', // In a real app, this would be hashed
       firstName: 'Alex',
       lastName: 'Johnson',
-      profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80'
+      profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80',
+      friendCode: 'ALEX1234',
+      friends: []
     };
-    this.createUser(user);
+    const alex = this.createUser(user1);
+    
+    // Create second sample user
+    const user2: InsertUser = {
+      username: 'sarah',
+      email: 'sarah@example.com',
+      password: 'password123',
+      firstName: 'Sarah',
+      lastName: 'Williams',
+      profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&h=80',
+      friendCode: 'SARAH123',
+      friends: []
+    };
+    this.createUser(user2);
     
     // Add challenges
     const now = new Date();
@@ -177,19 +196,126 @@ export class MemStorage implements IStorage {
       (user) => user.email === email
     );
   }
+  
+  async getUserByFriendCode(friendCode: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.friendCode === friendCode
+    );
+  }
+
+  // Generate a unique friend code
+  private generateFriendCode(): string {
+    // Generate a random 8-character alphanumeric code
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return code;
+  }
 
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
-    const newUser: User = { ...user, id };
+    // Generate a unique friend code if not provided
+    const friendCode = user.friendCode || this.generateFriendCode();
+    // Initialize empty friends array if not provided
+    const friends: number[] = Array.isArray(user.friends) ? user.friends : [];
+    
+    // Create a fresh user object to avoid TypeScript errors
+    const newUser: User = {
+      id,
+      username: user.username,
+      email: user.email,
+      password: user.password,
+      firstName: user.firstName,
+      lastName: user.lastName || null,
+      profileImage: user.profileImage || null,
+      friendCode,
+      friends
+    };
+    
     this.users.set(id, newUser);
     return newUser;
+  }
+  
+  async getFriends(userId: number): Promise<User[]> {
+    const user = await this.getUser(userId);
+    if (!user || !user.friends) return [];
+    
+    // Get all friends by their IDs
+    const friends: User[] = [];
+    for (const friendId of user.friends) {
+      const friend = await this.getUser(friendId);
+      if (friend) {
+        // Don't include password in returned friends
+        const { password, ...friendData } = friend;
+        friends.push(friend);
+      }
+    }
+    
+    return friends;
+  }
+  
+  async addFriend(userId: number, friendId: number): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    const friend = await this.getUser(friendId);
+    
+    if (!user || !friend) return undefined;
+    
+    // Add friendId to user's friends list if not already there
+    if (!user.friends) {
+      user.friends = [];
+    }
+    
+    if (!user.friends.includes(friendId)) {
+      user.friends.push(friendId);
+      this.users.set(userId, user);
+      
+      // Create a social activity for adding a friend
+      await this.createSocialActivity({
+        userId,
+        type: 'friend_added',
+        content: `added ${friend.firstName} ${friend.lastName || ''} as a friend`,
+        relatedId: friendId
+      });
+    }
+    
+    return user;
+  }
+  
+  async removeFriend(userId: number, friendId: number): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    
+    if (!user || !user.friends) return undefined;
+    
+    // Remove friendId from user's friends list
+    user.friends = user.friends.filter(id => id !== friendId);
+    this.users.set(userId, user);
+    
+    return user;
   }
 
   async updateUser(id: number, userData: Partial<InsertUser>): Promise<User | undefined> {
     const existingUser = await this.getUser(id);
     if (!existingUser) return undefined;
     
-    const updatedUser = { ...existingUser, ...userData };
+    // Handle friends array specifically to avoid type issues
+    let friends = existingUser.friends;
+    if (userData.friends !== undefined) {
+      friends = Array.isArray(userData.friends) ? userData.friends : [];
+    }
+    
+    // Create a properly typed updated user object
+    const updatedUser: User = {
+      ...existingUser,
+      ...userData,
+      friends,
+      // Ensure these fields are of the correct type
+      lastName: userData.lastName !== undefined ? userData.lastName : existingUser.lastName,
+      profileImage: userData.profileImage !== undefined ? userData.profileImage : existingUser.profileImage,
+      friendCode: userData.friendCode !== undefined ? userData.friendCode : existingUser.friendCode
+    };
+    
     this.users.set(id, updatedUser);
     return updatedUser;
   }

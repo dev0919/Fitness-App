@@ -14,6 +14,7 @@ import Community from "@/pages/Community";
 import Profile from "@/pages/Profile";
 import EditProfile from "@/pages/EditProfile";
 import Settings from "@/pages/Settings";
+import Friends from "@/pages/Friends";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import { AppLayout } from "@/layouts/AppLayout";
@@ -29,7 +30,8 @@ const authenticatedRoutes = [
   "/community",
   "/profile",
   "/edit-profile",
-  "/settings"
+  "/settings",
+  "/friends"
 ];
 
 function Router() {
@@ -167,6 +169,14 @@ function Router() {
         {isAuthenticated ? (
           <AppLayout>
             <Settings />
+          </AppLayout>
+        ) : <Login />}
+      </Route>
+      
+      <Route path="/friends">
+        {isAuthenticated ? (
+          <AppLayout>
+            <Friends />
           </AppLayout>
         ) : <Login />}
       </Route>

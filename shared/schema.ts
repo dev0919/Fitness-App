@@ -11,6 +11,8 @@ export const users = pgTable("users", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name"),
   profileImage: text("profile_image"),
+  friendCode: text("friend_code").unique(),
+  friends: json("friends").$type<number[]>().default([]),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -20,6 +22,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   profileImage: true,
+  friendCode: true,
+  friends: true,
 });
 
 // Workout schema
