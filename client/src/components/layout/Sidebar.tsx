@@ -24,10 +24,10 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => {
   return (
     <li>
       <Link href={href}>
-        <a className={`flex items-center px-4 py-3 ${isActive ? 'text-[#212121] border-l-4 border-[#4CAF50]' : 'text-[#616161] hover:bg-[#F5F5F5] border-l-4 border-transparent'} group`}>
+        <div className={`flex items-center px-4 py-3 ${isActive ? 'text-[#212121] border-l-4 border-[#4CAF50]' : 'text-[#616161] hover:bg-[#F5F5F5] border-l-4 border-transparent'} group cursor-pointer`}>
           <i className={`fas ${icon} ${isActive ? 'text-[#4CAF50]' : 'text-[#616161] group-hover:text-[#4CAF50]'} mr-3`}></i>
           <span className={isActive ? 'font-medium' : ''}>{label}</span>
-        </a>
+        </div>
       </Link>
     </li>
   );

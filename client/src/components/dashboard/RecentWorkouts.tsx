@@ -94,9 +94,9 @@ export const RecentWorkouts = ({ workouts }: RecentWorkoutsProps) => {
           </p>
         </div>
         <Link href="/workouts">
-          <a className="text-sm text-[#4CAF50] hover:text-[#388E3C]">
+          <div className="text-sm text-[#4CAF50] hover:text-[#388E3C] cursor-pointer">
             View all
-          </a>
+          </div>
         </Link>
       </div>
       <div className="bg-white">
@@ -109,7 +109,7 @@ export const RecentWorkouts = ({ workouts }: RecentWorkoutsProps) => {
               return (
                 <li key={workout.id}>
                   <Link href={`/workouts/${workout.id}`}>
-                    <a className="block hover:bg-[#F5F5F5]">
+                    <div className="block hover:bg-[#F5F5F5] cursor-pointer">
                       <div className="px-4 py-4 sm:px-6">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
@@ -133,7 +133,7 @@ export const RecentWorkouts = ({ workouts }: RecentWorkoutsProps) => {
                           </div>
                         </div>
                       </div>
-                    </a>
+                    </div>
                   </Link>
                 </li>
               );
