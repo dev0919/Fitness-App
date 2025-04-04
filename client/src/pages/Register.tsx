@@ -60,8 +60,9 @@ const Register = () => {
       const { confirmPassword, ...registerData } = data;
       
       try {
-        const response = await apiRequest("POST", "/api/auth/register", registerData);
-        return await response.json();
+        // apiRequest already returns the parsed JSON response
+        const userData = await apiRequest("POST", "/api/auth/register", registerData);
+        return userData;
       } catch (error: any) {
         setIsLoading(false);
         // Extract error message from API response if available
