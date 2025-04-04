@@ -32,7 +32,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }),
     cookie: {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-      secure: process.env.NODE_ENV === "production"
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/'
     }
   }));
 
@@ -104,7 +107,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (err) {
           return res.status(500).json({ message: 'Error during login after registration' });
         }
-        return res.status(201).json(userWithoutPassword);
+        
+        // Force the session to be saved before response
+        req.session.save((err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Error saving session' });
+          }
+          return res.status(201).json(userWithoutPassword);
+        });
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -117,7 +127,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post('/auth/login', passport.authenticate('local'), (req, res) => {
     // Remove password from response
     const { password, ...userWithoutPassword } = req.user as any;
-    res.json(userWithoutPassword);
+    
+    // Force the session to be saved before response
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Error saving session' });
+      }
+      res.json(userWithoutPassword);
+    });
   });
 
   apiRouter.post('/auth/logout', (req, res) => {
