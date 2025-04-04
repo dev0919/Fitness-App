@@ -46,22 +46,30 @@ const Login = () => {
     mutationFn: async (data: LoginFormValues) => {
       setIsLoading(true);
       try {
-        const response = await apiRequest("POST", "/api/auth/login", data);
-        return await response.json();
+        console.log("Login page: attempting login with:", data.username);
+        // apiRequest already returns the parsed JSON response
+        const userData = await apiRequest("POST", "/api/auth/login", data);
+        console.log("Login page: received response:", userData);
+        return userData;
       } catch (error) {
+        console.error("Login page: error during login:", error);
         setIsLoading(false);
         throw error;
       }
     },
     onSuccess: (userData) => {
+      console.log("Login page: login successful, redirecting to dashboard");
       setIsLoading(false);
       toast({
         title: "Login successful",
-        description: `Welcome back to FitConnect!`,
+        description: `Welcome back, ${userData.firstName}!`,
       });
-      navigate("/dashboard");
+      
+      // Use window.location for a hard refresh to ensure authentication state is updated
+      window.location.href = "/dashboard";
     },
     onError: (error) => {
+      console.error("Login page: login failed:", error);
       setIsLoading(false);
       toast({
         title: "Login failed",

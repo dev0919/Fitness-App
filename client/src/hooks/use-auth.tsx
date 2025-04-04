@@ -41,38 +41,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    refetch: refetchUser,
   } = useQuery<User | null, Error>({
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
       try {
-        const res = await fetch("/api/auth/me");
-        if (res.status === 401) return null;
-        if (!res.ok) throw new Error("Failed to fetch user data");
-        return await res.json();
+        console.log("Fetching current user data...");
+        const res = await fetch("/api/auth/me", {
+          credentials: "include", // Include cookies in the request
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+        
+        if (res.status === 401) {
+          console.log("User not authenticated");
+          return null;
+        }
+        
+        if (!res.ok) {
+          console.error("Failed to fetch user data:", res.status, res.statusText);
+          throw new Error("Failed to fetch user data");
+        }
+        
+        const userData = await res.json();
+        console.log("User authenticated:", userData);
+        return userData;
       } catch (error) {
+        console.error("Error fetching user data:", error);
         if (error instanceof Error && error.message === "Failed to fetch user data") {
           throw error;
         }
         return null;
       }
     },
-    refetchOnWindowFocus: false,
-    retry: false,
+    refetchOnWindowFocus: true,
+    retry: 1,
+    staleTime: 60000, // 1 minute
   });
 
   const loginMutation = useMutation<User, Error, LoginData>({
     mutationFn: async (credentials) => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
-      return await res.json();
+      console.log("Attempting login with:", credentials.username);
+      const userData = await apiRequest("POST", "/api/auth/login", credentials);
+      return userData; // apiRequest already returns JSON
     },
     onSuccess: (userData) => {
+      console.log("Login successful, user data:", userData);
+      // Update the cache with the user data
       queryClient.setQueryData(["/api/auth/me"], userData);
+      // Refetch to ensure we have the latest data
+      refetchUser();
+      
       toast({
         title: "Login successful",
         description: `Welcome back, ${userData.firstName}!`,
       });
+      
+      // Small delay to ensure the client has updated state
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
     },
     onError: (error) => {
+      console.error("Login failed:", error);
       toast({
         title: "Login failed",
         description: error.message || "Please check your credentials and try again",
@@ -83,17 +115,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation<User, Error, RegisterData>({
     mutationFn: async (userData) => {
-      const res = await apiRequest("POST", "/api/auth/register", userData);
-      return await res.json();
+      console.log("Attempting registration with:", userData.username);
+      const newUser = await apiRequest("POST", "/api/auth/register", userData);
+      return newUser; // apiRequest already returns JSON
     },
     onSuccess: (userData) => {
+      console.log("Registration successful, user data:", userData);
+      // Update the cache with the user data
       queryClient.setQueryData(["/api/auth/me"], userData);
+      // Refetch to ensure we have the latest data
+      refetchUser();
+      
       toast({
         title: "Registration successful",
         description: `Welcome to FitConnect, ${userData.firstName}!`,
       });
+      
+      // Small delay to ensure the client has updated state
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 100);
     },
     onError: (error) => {
+      console.error("Registration failed:", error);
       toast({
         title: "Registration failed",
         description: error.message || "Please check your information and try again",
