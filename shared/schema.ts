@@ -51,7 +51,8 @@ export const workouts = pgTable("workouts", {
   duration: integer("duration").notNull(), // in minutes
   distance: integer("distance"), // in meters
   caloriesBurned: integer("calories_burned"),
-  completed: boolean("completed").notNull().default(true),
+  completed: boolean("completed").notNull().default(false),
+  inProgress: boolean("in_progress").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -64,6 +65,7 @@ export const insertWorkoutSchema = createInsertSchema(workouts).pick({
   distance: true,
   caloriesBurned: true,
   completed: true,
+  inProgress: true,
 });
 
 // Activity schema (daily stats)

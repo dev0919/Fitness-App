@@ -121,8 +121,8 @@ const Workouts = () => {
                         <Link href={`/workouts/${workout.id}`} className="block hover:bg-[#F5F5F5]">
                           <div className="px-6 py-4">
                             <div className="flex items-center">
-                              <div className={`flex-shrink-0 h-12 w-12 rounded-full bg-[#FFECB3] flex items-center justify-center`}>
-                                <i className={`fas ${getWorkoutIcon(workout.type)} text-[#FFA000] text-xl`}></i>
+                              <div className={`flex-shrink-0 h-12 w-12 rounded-full ${workout.inProgress ? 'bg-[#FFECB3]' : 'bg-[#E0E0E0]'} flex items-center justify-center`}>
+                                <i className={`fas ${getWorkoutIcon(workout.type)} ${workout.inProgress ? 'text-[#FFA000]' : 'text-[#757575]'} text-xl`}></i>
                               </div>
                               <div className="ml-4 flex-grow">
                                 <div className="flex items-center justify-between">
@@ -146,7 +146,11 @@ const Workouts = () => {
                                     </div>
                                   </div>
                                   <div className="flex items-center">
-                                    <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 mr-3">In Progress</span>
+                                    {workout.inProgress ? (
+                                      <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 mr-3">In Progress</span>
+                                    ) : (
+                                      <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 mr-3">Not Started</span>
+                                    )}
                                     <i className="fas fa-chevron-right text-[#9E9E9E]"></i>
                                   </div>
                                 </div>

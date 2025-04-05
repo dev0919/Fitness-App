@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
-import { ArrowLeft, Edit, Trash2, Save, X } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Save, X, Play, CheckSquare } from "lucide-react";
 import { Workout, insertWorkoutSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
@@ -41,7 +41,8 @@ const WorkoutDetail = () => {
       distance: 0,
       caloriesBurned: 0,
       description: "",
-      completed: true,
+      completed: false,
+      inProgress: false,
     },
   });
   
@@ -56,6 +57,7 @@ const WorkoutDetail = () => {
         caloriesBurned: workout.caloriesBurned || 0,
         description: workout.description || "",
         completed: workout.completed,
+        inProgress: workout.inProgress || false,
       });
     }
   }, [workout, form]);
@@ -83,6 +85,60 @@ const WorkoutDetail = () => {
       toast({
         title: "Error",
         description: "Failed to update workout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation for starting a workout
+  const startWorkout = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(
+        "PATCH", 
+        `/api/workouts/${workoutId}`, 
+        { inProgress: true, completed: false }
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/workouts/${workoutId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/workouts"] });
+      toast({
+        title: "Workout started",
+        description: "Your workout has been started! Good luck!",
+      });
+    },
+    onError: (error) => {
+      console.error("Error starting workout:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start workout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Mutation for completing a workout
+  const completeWorkout = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(
+        "PATCH", 
+        `/api/workouts/${workoutId}`, 
+        { inProgress: false, completed: true }
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/workouts/${workoutId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/workouts"] });
+      toast({
+        title: "Workout completed",
+        description: "Great job! Your workout has been completed successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error completing workout:", error);
+      toast({
+        title: "Error",
+        description: "Failed to complete workout. Please try again.",
         variant: "destructive",
       });
     },
@@ -286,6 +342,40 @@ const WorkoutDetail = () => {
               </>
             ) : (
               <>
+                {/* Start/Finish Workout Buttons */}
+                {!workout.completed && !workout.inProgress && (
+                  <Button
+                    size="sm"
+                    onClick={() => startWorkout.mutate()}
+                    disabled={startWorkout.isPending}
+                    className="flex items-center gap-1 bg-[#4CAF50] hover:bg-[#388E3C] text-white"
+                  >
+                    {startWorkout.isPending ? 'Starting...' : (
+                      <>
+                        <Play className="h-4 w-4" />
+                        Start Workout
+                      </>
+                    )}
+                  </Button>
+                )}
+                
+                {workout.inProgress && !workout.completed && (
+                  <Button
+                    size="sm"
+                    onClick={() => completeWorkout.mutate()}
+                    disabled={completeWorkout.isPending}
+                    className="flex items-center gap-1 bg-[#FF9800] hover:bg-[#F57C00] text-white"
+                  >
+                    {completeWorkout.isPending ? 'Finishing...' : (
+                      <>
+                        <CheckSquare className="h-4 w-4" />
+                        Finish Workout
+                      </>
+                    )}
+                  </Button>
+                )}
+                
+                {/* Regular Edit/Delete Buttons */}
                 <Button
                   size="sm"
                   variant="outline"
@@ -437,25 +527,47 @@ const WorkoutDetail = () => {
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="completed"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <input
-                          type="checkbox"
-                          checked={field.value}
-                          onChange={field.onChange}
-                          className="h-4 w-4 text-[#4CAF50] border-gray-300 rounded"
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Mark as completed</FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="inProgress"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="h-4 w-4 text-[#FF9800] border-gray-300 rounded"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Mark as in progress</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                
+                  <FormField
+                    control={form.control}
+                    name="completed"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="h-4 w-4 text-[#4CAF50] border-gray-300 rounded"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Mark as completed</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </form>
             </Form>
           </div>
@@ -499,12 +611,19 @@ const WorkoutDetail = () => {
                         </svg>
                         Completed
                       </span>
-                    ) : (
+                    ) : workout.inProgress ? (
                       <span className="flex items-center text-[#FF9800]">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         In Progress
+                      </span>
+                    ) : (
+                      <span className="flex items-center text-[#9E9E9E]">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Not Started
                       </span>
                     )}
                   </p>

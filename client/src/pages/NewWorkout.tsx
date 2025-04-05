@@ -84,7 +84,7 @@ const NewWorkout = () => {
       description: data.notes || undefined, // Map notes to description field expected by the backend
       distance: data.distance || undefined,
       caloriesBurned: data.caloriesBurned || undefined,
-      completed: true  // Default to completed
+      completed: false  // Default to not completed so it can be started
     };
     
     console.log("Submitting workout data:", workoutData);
