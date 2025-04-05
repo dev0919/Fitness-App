@@ -581,6 +581,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Server error' });
     }
   });
+  
+  // Update challenge progress endpoint
+  apiRouter.patch('/challenges/:id/progress', isAuthenticated, async (req, res) => {
+    try {
+      const challengeId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      const { progress } = req.body;
+      
+      // Validate progress
+      if (progress === undefined || progress < 0 || progress > 100) {
+        return res.status(400).json({ message: 'Progress must be a number between 0 and 100' });
+      }
+      
+      // Check if challenge exists
+      const challenge = await storage.getChallenge(challengeId);
+      if (!challenge) {
+        return res.status(404).json({ message: 'Challenge not found' });
+      }
+      
+      // Check if user is participating in this challenge
+      const participation = await storage.getChallengeParticipant(challengeId, userId);
+      if (!participation) {
+        return res.status(403).json({ message: 'You are not participating in this challenge' });
+      }
+      
+      // Calculate if the challenge is completed
+      const completed = progress >= 100;
+      
+      // Update the progress
+      const updatedParticipation = await storage.updateChallengeProgress(
+        participation.id, 
+        progress,
+        completed
+      );
+      
+      if (!updatedParticipation) {
+        return res.status(404).json({ message: 'Failed to update progress' });
+      }
+      
+      // Create a social activity for reaching milestones (25%, 50%, 75%, 100%)
+      const milestones = [25, 50, 75, 100];
+      const currentMilestone = milestones.find(m => progress >= m && participation.progress < m);
+      
+      if (currentMilestone) {
+        const milestone = currentMilestone;
+        await storage.createSocialActivity({
+          userId,
+          type: 'challenge_milestone',
+          content: `reached ${milestone}% on the ${challenge.title} challenge!`,
+          relatedId: challengeId
+        });
+      }
+      
+      res.json(updatedParticipation);
+    } catch (error) {
+      console.error('Error updating challenge progress:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
 
   // SOCIAL ACTIVITY ROUTES
   apiRouter.get('/social/activities/friends', isAuthenticated, async (req, res) => {

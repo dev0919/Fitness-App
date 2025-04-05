@@ -365,8 +365,68 @@ const ChallengeDetail = () => {
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                           <label className="block text-sm font-medium text-[#424242] mb-2">Update Progress</label>
                           <div className="space-y-4">
+                            {/* Current Progress Display */}
+                            <div className="bg-green-50 p-3 rounded-lg">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-700">Current Progress:</span>
+                                <span className="text-lg font-semibold text-green-600">{userParticipation.progress}%</span>
+                              </div>
+                              
+                              {/* Daily Progress Counter */}
+                              <div className="mt-2">
+                                <h4 className="text-sm font-medium text-gray-700 mb-1">Daily Progress Update</h4>
+                                <div className="flex items-center space-x-2">
+                                  <button 
+                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300"
+                                    onClick={() => {
+                                      const input = document.getElementById('daily-progress-input') as HTMLInputElement;
+                                      const currentValue = parseInt(input.value) || 0;
+                                      if (currentValue > 0) {
+                                        input.value = (currentValue - 1).toString();
+                                      }
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  <input
+                                    id="daily-progress-input"
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    defaultValue="5"
+                                    className="w-16 h-10 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-1 focus:ring-green-500"
+                                  />
+                                  <button 
+                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300"
+                                    onClick={() => {
+                                      const input = document.getElementById('daily-progress-input') as HTMLInputElement;
+                                      const currentValue = parseInt(input.value) || 0;
+                                      input.value = (currentValue + 1).toString();
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                  <button
+                                    className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 ml-2"
+                                    onClick={() => {
+                                      const input = document.getElementById('daily-progress-input') as HTMLInputElement;
+                                      const dailyProgressValue = parseInt(input.value) || 0;
+                                      if (dailyProgressValue > 0) {
+                                        const newProgress = Math.min(userParticipation.progress + dailyProgressValue, 100);
+                                        updateProgress.mutate(newProgress);
+                                      }
+                                    }}
+                                    disabled={updateProgress.isPending}
+                                  >
+                                    {updateProgress.isPending ? "Adding..." : "Add Progress"}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            
                             {/* Progress Slider */}
                             <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Or Set Exact Progress:</label>
                               <input 
                                 type="range" 
                                 min="0"
@@ -377,7 +437,7 @@ const ChallengeDetail = () => {
                                 id="progress-slider"
                                 onChange={(e) => {
                                   const value = e.target.value;
-                                  document.getElementById('progress-value')!.textContent = value;
+                                  document.getElementById('progress-value')!.textContent = value + "%";
                                   document.getElementById('progress-number-input')!.value = value;
                                 }}
                               />
