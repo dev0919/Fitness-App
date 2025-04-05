@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -55,6 +55,15 @@ const Tokens = () => {
   const [_, navigate] = useLocation();
   const [walletAddress, setWalletAddress] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Redirect to consolidated rewards page
+  useEffect(() => {
+    toast({
+      title: "Page Moved",
+      description: "The tokens section has been moved to the Rewards page.",
+    });
+    navigate("/rewards");
+  }, [navigate, toast]);
 
   // Query wallet data
   const {
