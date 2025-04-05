@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000px" height="600px" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#F9FFF9" />
+  <path d="M0,100 Q250,150 500,100 T1000,120 V600 H0 Z" fill="#E8F5E9" />
+  <path d="M0,150 Q250,200 500,150 T1000,170 V600 H0 Z" fill="#C8E6C9" opacity="0.6" />
+  <path d="M0,200 Q250,250 500,200 T1000,220 V600 H0 Z" fill="#A5D6A7" opacity="0.4" />
+  
+  <!-- Fitness Icons -->
+  <circle cx="100" cy="300" r="20" fill="#4CAF50" opacity="0.2" />
+  <circle cx="200" cy="400" r="15" fill="#4CAF50" opacity="0.1" />
+  <circle cx="400" cy="500" r="30" fill="#4CAF50" opacity="0.15" />
+  <circle cx="700" cy="300" r="25" fill="#4CAF50" opacity="0.1" />
+  <circle cx="900" cy="500" r="20" fill="#4CAF50" opacity="0.2" />
+  
+  <!-- Dumbbell shapes -->
+  <rect x="150" y="200" width="10" height="40" rx="5" fill="#4CAF50" opacity="0.2" />
+  <rect x="180" y="200" width="10" height="40" rx="5" fill="#4CAF50" opacity="0.2" />
+  <rect x="160" y="215" width="20" height="10" rx="5" fill="#4CAF50" opacity="0.2" />
+  
+  <rect x="850" y="350" width="10" height="40" rx="5" fill="#4CAF50" opacity="0.2" />
+  <rect x="880" y="350" width="10" height="40" rx="5" fill="#4CAF50" opacity="0.2" />
+  <rect x="860" y="365" width="20" height="10" rx="5" fill="#4CAF50" opacity="0.2" />
+  
+  <!-- Pulse line -->
+  <path d="M600,250 L650,250 L670,200 L700,300 L720,270 L750,250" stroke="#4CAF50" stroke-width="3" fill="none" opacity="0.3" />
+</svg>

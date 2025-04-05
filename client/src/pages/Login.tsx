@@ -18,6 +18,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Import SVG assets
+import fitnessLogoSvg from "../assets/fitness-logo.svg";
+import workoutIconSvg from "../assets/workout-icon.svg";
+import communityIconSvg from "../assets/community-icon.svg";
+import rewardIconSvg from "../assets/reward-icon.svg";
+import heroBgSvg from "../assets/hero-bg.svg";
 
 // Login schema
 const loginSchema = z.object({
@@ -85,73 +93,254 @@ const Login = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#4CAF50]">FitConnect</h1>
-          <p className="text-[#616161] mt-2">Connect, Track, and Achieve Your Fitness Goals</p>
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Navigation */}
+      <header className="w-full py-4 px-6 flex justify-between items-center border-b border-gray-100">
+        <div className="flex items-center space-x-2">
+          <img src={fitnessLogoSvg} alt="FitConnect Logo" className="h-10 w-10" />
+          <h1 className="text-2xl font-bold text-[#4CAF50]">FitConnect</h1>
         </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Login</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="Enter your password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button 
-                  type="submit" 
-                  className="w-full bg-[#4CAF50] hover:bg-[#388E3C]"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Logging in..." : "Login"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
-            <div className="text-sm text-[#616161]">
-              Don't have an account?{" "}
-              <Link href="/register" className="text-[#4CAF50] hover:underline">
-                Register
-              </Link>
+        <div className="flex items-center space-x-4">
+          <Link href="/about" className="text-[#616161] hover:text-[#4CAF50] text-sm hidden md:inline">
+            About
+          </Link>
+          <Link href="/features" className="text-[#616161] hover:text-[#4CAF50] text-sm hidden md:inline">
+            Features
+          </Link>
+          <Link href="/pricing" className="text-[#616161] hover:text-[#4CAF50] text-sm hidden md:inline">
+            Pricing
+          </Link>
+          <Link href="/register">
+            <Button variant="outline" className="border-[#4CAF50] text-[#4CAF50] hover:bg-[#E8F5E9]">
+              Register
+            </Button>
+          </Link>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section 
+          className="relative py-20 px-6 md:px-10 lg:px-20 flex flex-col md:flex-row items-center"
+          style={{ 
+            backgroundImage: `url(${heroBgSvg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        >
+          <div className="md:w-1/2 mb-10 md:mb-0 md:pr-10">
+            <h1 className="text-4xl md:text-5xl font-bold text-[#212121] leading-tight">
+              Your Fitness Journey <span className="text-[#4CAF50]">Reimagined</span>
+            </h1>
+            <p className="text-[#616161] text-lg my-6">
+              Connect with friends, track your progress, earn rewards, and transform your fitness experience with our innovative blockchain-powered platform.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button className="bg-[#4CAF50] hover:bg-[#388E3C] text-white py-6 px-8 rounded-lg text-lg">
+                Try Free Demo
+              </Button>
+              <Button variant="outline" className="border-[#4CAF50] text-[#4CAF50] hover:bg-[#E8F5E9] py-6 px-8 rounded-lg text-lg">
+                Learn More
+              </Button>
             </div>
-          </CardFooter>
-        </Card>
-        
-        <div className="mt-6 text-center text-sm text-[#9E9E9E]">
-          <p>Demo account: username: alex, password: password123</p>
+          </div>
+          <div className="md:w-1/2">
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div className="p-8">
+                <div className="mb-6 text-center">
+                  <h2 className="text-2xl font-bold text-[#212121]">Welcome Back</h2>
+                  <p className="text-[#616161] mt-2">Sign in to your FitConnect account</p>
+                </div>
+                <Tabs defaultValue="login" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsTrigger value="login">Login</TabsTrigger>
+                    <TabsTrigger value="register">Register</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="login">
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Username</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter your username" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Password</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="Enter your password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-[#4CAF50] hover:bg-[#388E3C]"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? "Logging in..." : "Login"}
+                        </Button>
+                      </form>
+                    </Form>
+                    <div className="mt-4 text-center text-sm text-[#9E9E9E]">
+                      <p>Demo account: username: alex, password: password123</p>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="register">
+                    <div className="text-center py-8">
+                      <p className="text-[#616161] mb-4">Create a new account to get started</p>
+                      <Link href="/register">
+                        <Button className="bg-[#4CAF50] hover:bg-[#388E3C]">
+                          Go to Registration
+                        </Button>
+                      </Link>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-16 px-6 md:px-10 lg:px-20 bg-white">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-[#212121]">Key Features</h2>
+            <p className="text-[#616161] mt-3 max-w-2xl mx-auto">
+              FitConnect combines cutting-edge technology with social fitness to create a unique experience
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Feature 1 */}
+            <div className="bg-[#F5F5F5] rounded-xl p-6 transition-all hover:shadow-md">
+              <img src={workoutIconSvg} alt="Workout Tracking" className="h-16 w-16 mb-4" />
+              <h3 className="text-xl font-bold text-[#212121] mb-2">
+                Smart Workout Tracking
+              </h3>
+              <p className="text-[#616161]">
+                Track your workouts, set goals, and monitor your progress with advanced analytics.
+              </p>
+            </div>
+            
+            {/* Feature 2 */}
+            <div className="bg-[#F5F5F5] rounded-xl p-6 transition-all hover:shadow-md">
+              <img src={communityIconSvg} alt="Social Community" className="h-16 w-16 mb-4" />
+              <h3 className="text-xl font-bold text-[#212121] mb-2">
+                Social Community
+              </h3>
+              <p className="text-[#616161]">
+                Connect with friends, share achievements, and motivate each other on your fitness journeys.
+              </p>
+            </div>
+            
+            {/* Feature 3 */}
+            <div className="bg-[#F5F5F5] rounded-xl p-6 transition-all hover:shadow-md">
+              <img src={rewardIconSvg} alt="Token Rewards" className="h-16 w-16 mb-4" />
+              <h3 className="text-xl font-bold text-[#212121] mb-2">
+                Token Rewards
+              </h3>
+              <p className="text-[#616161]">
+                Earn tokens for completing workouts and challenges that can be redeemed for real rewards.
+              </p>
+            </div>
+            
+            {/* Feature 4 */}
+            <div className="bg-[#F5F5F5] rounded-xl p-6 transition-all hover:shadow-md">
+              <img src={fitnessLogoSvg} alt="Fitness Challenges" className="h-16 w-16 mb-4" />
+              <h3 className="text-xl font-bold text-[#212121] mb-2">
+                Engaging Challenges
+              </h3>
+              <p className="text-[#616161]">
+                Participate in daily and weekly challenges to push your limits and earn special rewards.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Call to Action */}
+        <section className="py-20 px-6 md:px-10 lg:px-20 bg-[#E8F5E9] text-center">
+          <h2 className="text-3xl font-bold text-[#212121] mb-4">
+            Ready to Transform Your Fitness Journey?
+          </h2>
+          <p className="text-[#616161] max-w-2xl mx-auto mb-8">
+            Join thousands of users who have already revolutionized their fitness experience with FitConnect.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/register">
+              <Button className="bg-[#4CAF50] hover:bg-[#388E3C] text-lg px-8 py-6">
+                Get Started Now
+              </Button>
+            </Link>
+            <Button variant="outline" className="border-[#4CAF50] text-[#4CAF50] hover:bg-white text-lg px-8 py-6">
+              View Demo
+            </Button>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-[#212121] text-white py-12 px-6 md:px-10 lg:px-20">
+        <div className="grid md:grid-cols-4 gap-8">
+          <div>
+            <div className="flex items-center space-x-2 mb-4">
+              <img src={fitnessLogoSvg} alt="FitConnect Logo" className="h-8 w-8" />
+              <h3 className="text-xl font-bold">FitConnect</h3>
+            </div>
+            <p className="text-gray-400">
+              The future of fitness tracking and social networking.
+            </p>
+          </div>
+          
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Company</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="text-gray-400 hover:text-white">About Us</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Careers</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Contact</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Blog</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Resources</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="text-gray-400 hover:text-white">Documentation</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Help Center</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Privacy Policy</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Terms of Service</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Connect</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="text-gray-400 hover:text-white">Twitter</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Facebook</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Instagram</a></li>
+              <li><a href="#" className="text-gray-400 hover:text-white">Discord</a></li>
+            </ul>
+          </div>
         </div>
-      </div>
+        
+        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <p>&copy; {new Date().getFullYear()} FitConnect. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 };
