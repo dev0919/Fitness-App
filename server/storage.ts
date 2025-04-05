@@ -779,9 +779,14 @@ export class MemStorage implements IStorage {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
-  async getFriendActivities(userIds: number[], limit: number = 10): Promise<SocialActivity[]> {
+  async getFriendActivities(userIds: number[], limit: number = 20): Promise<SocialActivity[]> {
+    // Get all activities that are either:
+    // 1. From the user's friends OR
+    // 2. Posted by the current user (first user in userIds array is the current user)
+    const currentUserId = userIds[0]; // The first ID in the array is the current user's ID
+    
     return Array.from(this.socialActivities.values())
-      .filter(activity => userIds.includes(activity.userId))
+      .filter(activity => userIds.includes(activity.userId) || activity.userId === currentUserId)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, limit);
   }

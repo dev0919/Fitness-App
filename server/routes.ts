@@ -647,15 +647,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.friends || user.friends.length === 0) {
-        // If user has no friends, return empty array
-        return res.json([]);
+      // Create a list with the current user ID first, then friends
+      const userIdsToFetch = [userId]; // Always include current user
+      
+      // Add friends if user has any
+      if (user && user.friends && user.friends.length > 0) {
+        userIdsToFetch.push(...user.friends);
       }
       
-      // Get activities from user's friends
-      const activities = await storage.getFriendActivities(user.friends);
+      // Get activities from both the user and their friends
+      const activities = await storage.getFriendActivities(userIdsToFetch);
       res.json(activities);
     } catch (error) {
+      console.error("Error fetching friend activities:", error);
       res.status(500).json({ message: 'Server error' });
     }
   });

@@ -112,23 +112,76 @@ const Community = () => {
     setImagePreview(null);
   };
   
+  // Function to compress and resize an image before upload
+  const compressImage = async (file: File, maxWidth = 800, maxHeight = 600, quality = 0.7): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        const img = new Image();
+        img.onload = () => {
+          // Calculate new dimensions while maintaining aspect ratio
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+          
+          // Create canvas and resize image
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Convert to base64 with reduced quality
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          } else {
+            // Fallback if canvas context is not available
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              if (e.target && typeof e.target.result === 'string') {
+                resolve(e.target.result);
+              } else {
+                resolve('');
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+        
+        if (readerEvent.target && typeof readerEvent.target.result === 'string') {
+          img.src = readerEvent.target.result;
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+  
   // Create post mutation
   const createPost = useMutation({
     mutationFn: async () => {
       // Convert image to base64 string if there's an image selected
       let imageData = null;
       if (selectedImage) {
-        const reader = new FileReader();
-        imageData = await new Promise<string>((resolve) => {
-          reader.onload = (e) => {
-            if (e.target && typeof e.target.result === 'string') {
-              resolve(e.target.result);
-            } else {
-              resolve('');
-            }
-          };
-          reader.readAsDataURL(selectedImage);
-        });
+        try {
+          // Compress and resize the image before sending
+          imageData = await compressImage(selectedImage);
+        } catch (error) {
+          console.error("Error processing image:", error);
+          toast({
+            title: "Error",
+            description: "Could not process the image. Try a smaller image.",
+            variant: "destructive"
+          });
+        }
       }
       
       return await apiRequest("POST", "/api/social/activities", {
