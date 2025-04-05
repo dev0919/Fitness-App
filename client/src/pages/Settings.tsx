@@ -45,7 +45,7 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 const Settings = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'profile' | 'account' | 'notifications' | 'privacy'>('profile');
-  const { logout } = useAuth();
+  const { logoutMutation } = useAuth();
   const [_, navigate] = useLocation();
   
   // Fetch user data
@@ -157,8 +157,11 @@ const Settings = () => {
   
   // Handle logout
   const handleLogout = () => {
-    logout();
-    navigate("/");
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        navigate("/");
+      }
+    });
   };
   
   // Calculate stats for profile overview

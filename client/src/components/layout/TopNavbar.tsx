@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Menu, X } from "lucide-react";
 
 // Define User interface for the component
@@ -39,7 +40,7 @@ const NavItem = ({ href, icon, label, isActive, onClick }: NavItemProps) => {
 };
 
 export const TopNavbar = () => {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -49,17 +50,14 @@ export const TopNavbar = () => {
     throwOnError: false,
   });
 
-  const handleLogout = async () => {
-    try {
-      await apiRequest("POST", "/api/auth/logout");
-      window.location.href = "/login"; // Force a full refresh to clear all state
-    } catch (error) {
-      toast({
-        title: "Logout failed",
-        description: "There was an error logging out",
-        variant: "destructive",
-      });
-    }
+  const { logoutMutation } = useAuth();
+  
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        navigate('/');
+      }
+    });
   };
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
@@ -123,22 +121,15 @@ export const TopNavbar = () => {
           {/* Profile dropdown */}
           <div className="hidden md:ml-4 md:flex md:items-center">
             {user && (
-              <div className="flex items-center">
-                <img 
-                  src={user.profileImage || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80"} 
-                  alt="User avatar" 
-                  className="w-8 h-8 rounded-full object-cover" 
-                />
-                <div className="ml-2 mr-4">
-                  <p className="text-sm font-medium text-[#212121]">{`${user.firstName} ${user.lastName || ''}`}</p>
+              <Link href="/settings">
+                <div className="flex items-center cursor-pointer">
+                  <img 
+                    src={user.profileImage || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80"} 
+                    alt="User avatar" 
+                    className="w-8 h-8 rounded-full object-cover hover:ring-2 hover:ring-[#4CAF50]" 
+                  />
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center justify-center px-3 py-1 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]"
-                >
-                  <i className="fas fa-sign-out-alt mr-1"></i> Logout
-                </button>
-              </div>
+              </Link>
             )}
           </div>
           
