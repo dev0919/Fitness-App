@@ -49,6 +49,27 @@ export class DemoDataManager {
 
     console.log('Initializing demo data for user:', DEMO_USERNAME);
 
+    // Create token wallet for demo user
+    let wallet = await this.storage.getTokenWallet(DEMO_USER_ID);
+    if (!wallet) {
+      wallet = await this.storage.createTokenWallet({
+        userId: DEMO_USER_ID,
+        balance: "1000", // Initial bonus tokens
+        walletAddress: null // No external wallet connected yet
+      });
+      
+      // Add signup bonus transaction
+      await this.storage.createTokenTransaction({
+        userId: DEMO_USER_ID,
+        amount: "1000",
+        type: "signup_bonus",
+        relatedId: null,
+        status: "completed",
+        txHash: null,
+        description: "Welcome bonus for joining FitConnect"
+      });
+    }
+
     // Load demo workouts
     for (const workout of demoWorkouts) {
       await this.storage.createWorkout({
@@ -118,6 +139,17 @@ export class DemoDataManager {
       await this.storage.createPrivateMessage(message);
     }
 
+    // Add workout token transaction
+    await this.storage.createTokenTransaction({
+      userId: DEMO_USER_ID,
+      amount: "50",
+      type: "workout",
+      relatedId: 1,
+      status: "completed",
+      txHash: null,
+      description: "Completed a running workout"
+    });
+
     this.initializedDemo = true;
     console.log('Demo data initialization complete');
   }
@@ -171,7 +203,7 @@ export class DemoDataManager {
         await this.storage.updateActivity(todayActivity.id, {
           ...activity,
           // Preserve today's workout count if higher
-          workouts: Math.max(activity.workouts, todayActivity.workouts)
+          workoutsCompleted: Math.max(activity.workoutsCompleted || 0, todayActivity.workoutsCompleted || 0)
         });
       } else {
         // For past days, use the demo data directly
@@ -230,6 +262,19 @@ export class DemoDataManager {
     if (alexUser) {
       // Set friends to demo list
       await this.storage.updateUser(DEMO_USER_ID, { friends: [...demoFriends] });
+    }
+    
+    // 5. Reset token wallet to demo balance
+    const wallet = await this.storage.getTokenWallet(DEMO_USER_ID);
+    if (wallet) {
+      await this.storage.updateTokenWallet(DEMO_USER_ID, "1000");
+    } else {
+      // Create wallet if it doesn't exist
+      await this.storage.createTokenWallet({
+        userId: DEMO_USER_ID,
+        balance: "1000",
+        walletAddress: null
+      });
     }
     
     console.log('Demo data reset complete');

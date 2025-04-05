@@ -51,57 +51,57 @@ export const demoActivities: Omit<Activity, "id">[] = [
     userId: 1,
     date: new Date(Date.now() - 86400000 * 6), // 6 days ago
     steps: 8500,
-    calories: 2200,
-    workouts: 1,
-    distance: 5000,
+    caloriesBurned: 2200,
+    workoutsCompleted: 1,
+    activeMinutes: 30,
   },
   {
     userId: 1,
     date: new Date(Date.now() - 86400000 * 5), // 5 days ago
     steps: 7200,
-    calories: 2100,
-    workouts: 0,
-    distance: 2000,
+    caloriesBurned: 2100,
+    workoutsCompleted: 0,
+    activeMinutes: 25,
   },
   {
     userId: 1,
     date: new Date(Date.now() - 86400000 * 4), // 4 days ago
     steps: 9400,
-    calories: 2350,
-    workouts: 0,
-    distance: 3800,
+    caloriesBurned: 2350,
+    workoutsCompleted: 0,
+    activeMinutes: 35,
   },
   {
     userId: 1,
     date: new Date(Date.now() - 86400000 * 3), // 3 days ago
     steps: 10200,
-    calories: 2450,
-    workouts: 1,
-    distance: 4200,
+    caloriesBurned: 2450,
+    workoutsCompleted: 1,
+    activeMinutes: 45,
   },
   {
     userId: 1,
     date: new Date(Date.now() - 86400000 * 2), // 2 days ago
     steps: 9100,
-    calories: 2250,
-    workouts: 0,
-    distance: 3600,
+    caloriesBurned: 2250,
+    workoutsCompleted: 0,
+    activeMinutes: 30,
   },
   {
     userId: 1,
     date: new Date(Date.now() - 86400000), // 1 day ago
     steps: 11500,
-    calories: 2600,
-    workouts: 1,
-    distance: 6000,
+    caloriesBurned: 2600,
+    workoutsCompleted: 1,
+    activeMinutes: 60,
   },
   {
     userId: 1,
     date: new Date(), // Today
     steps: 5400,
-    calories: 1200,
-    workouts: 0,
-    distance: 2200,
+    caloriesBurned: 1200,
+    workoutsCompleted: 0,
+    activeMinutes: 20,
   },
 ];
 

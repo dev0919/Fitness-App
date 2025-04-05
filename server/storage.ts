@@ -203,7 +203,7 @@ export class MemStorage implements IStorage {
   }
 
   private initializeData() {
-    // Create first sample user
+    // Create first sample user (demo user)
     const user1: InsertUser = {
       username: 'alex',
       email: 'alex@example.com',
@@ -214,7 +214,7 @@ export class MemStorage implements IStorage {
       friendCode: 'ALEX1234',
       friends: []
     };
-    const alex = this.createUser(user1);
+    this.createUser(user1);
     
     // Create second sample user
     const user2: InsertUser = {
@@ -229,7 +229,7 @@ export class MemStorage implements IStorage {
     };
     this.createUser(user2);
     
-    // Add challenges
+    // Add global challenges that all users can see and join
     const now = new Date();
     const twoDaysLater = new Date(now);
     twoDaysLater.setDate(twoDaysLater.getDate() + 2);
@@ -271,20 +271,7 @@ export class MemStorage implements IStorage {
       goal: { type: 'steps', amount: 140000 }
     });
     
-    // Create token wallets for existing users
-    this.createTokenWallet({
-      userId: 1, // alex
-      balance: "1000", // Initial bonus tokens
-      walletAddress: null // No external wallet connected yet
-    });
-    
-    this.createTokenWallet({
-      userId: 2, // sarah
-      balance: "750", 
-      walletAddress: null
-    });
-    
-    // Initialize token reward rules
+    // Initialize token reward rules (global configuration)
     this.createTokenRewardRule({
       actionType: "workout_completed",
       amount: "50",
@@ -321,7 +308,7 @@ export class MemStorage implements IStorage {
       isActive: true
     });
     
-    // Initialize reward store items
+    // Initialize reward store items (global items available to all users)
     this.createRewardStoreItem({
       name: "Premium Workout Plans",
       description: "Unlock access to exclusive workouts designed by professional trainers for 30 days.",
@@ -362,37 +349,8 @@ export class MemStorage implements IStorage {
       isActive: true
     });
     
-    // Add some token transactions to Alex's history
-    this.createTokenTransaction({
-      userId: 1,
-      amount: "1000",
-      type: "signup_bonus",
-      relatedId: null,
-      status: "completed",
-      txHash: null,
-      description: "Welcome bonus for joining FitConnect"
-    });
-    
-    this.createTokenTransaction({
-      userId: 1,
-      amount: "50",
-      type: "workout",
-      relatedId: 1,
-      status: "completed",
-      txHash: null,
-      description: "Completed a running workout"
-    });
-    
-    // Add some token transactions to Sarah's history
-    this.createTokenTransaction({
-      userId: 2,
-      amount: "750",
-      type: "signup_bonus",
-      relatedId: null,
-      status: "completed",
-      txHash: null,
-      description: "Welcome bonus for joining FitConnect"
-    });
+    // Note: User-specific data (workouts, activities, token wallets, etc.)
+    // is now handled by the DemoDataManager for the demo user only
   }
 
   // User methods
