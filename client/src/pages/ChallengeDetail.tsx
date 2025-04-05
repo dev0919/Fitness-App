@@ -151,7 +151,7 @@ const ChallengeDetail = () => {
   // Find user's participation data if they're participating
   const userParticipation = userChallenges?.find(
     (uc: any) => uc.challenge.id === challengeId
-  )?.participant;
+  )?.participant || { progress: 0, completed: false };
   
   return (
     <div className="px-4 py-6 md:px-8">
@@ -370,6 +370,16 @@ const ChallengeDetail = () => {
                               <div className="flex justify-between items-center">
                                 <span className="text-sm text-gray-700">Current Progress:</span>
                                 <span className="text-lg font-semibold text-green-600">{userParticipation.progress}%</span>
+                              </div>
+                              
+                              {/* Progress Bar Display */}
+                              <div className="mt-2">
+                                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                                  <div 
+                                    className="bg-green-600 h-2.5 rounded-full transition-all duration-300 ease-in-out" 
+                                    style={{ width: `${userParticipation.progress}%` }}
+                                  ></div>
+                                </div>
                               </div>
                               
                               {/* Daily Progress Counter */}
