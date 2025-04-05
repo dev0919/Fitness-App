@@ -363,74 +363,163 @@ const ChallengeDetail = () => {
                         </div>
                         
                         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                          <label className="block text-sm font-medium text-[#424242] mb-2">Update Progress</label>
+                          <label className="block text-sm font-medium text-[#424242] mb-2">Challenge Progress</label>
                           <div className="space-y-4">
                             {/* Current Progress Display */}
                             <div className="bg-green-50 p-3 rounded-lg">
                               <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-700">Current Progress:</span>
+                                <span className="text-sm text-gray-700">Overall Progress:</span>
                                 <span className="text-lg font-semibold text-green-600">{userParticipation.progress}%</span>
                               </div>
                               
-                              {/* Progress Bar Display */}
-                              <div className="mt-2">
-                                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                                  <div 
-                                    className="bg-green-600 h-2.5 rounded-full transition-all duration-300 ease-in-out" 
-                                    style={{ width: `${userParticipation.progress}%` }}
-                                  ></div>
+                              {/* Days Completed Counter */}
+                              <div className="mt-3 flex items-center justify-between">
+                                <div className="flex items-center">
+                                  <div className="mr-2">
+                                    <span className="text-sm font-medium text-gray-700">Days Completed:</span>
+                                  </div>
+                                  <div className="flex items-center bg-white px-3 py-1 rounded-md border border-gray-200">
+                                    <span className="text-lg font-bold text-green-600">{Math.floor(userParticipation.progress / 14.29)}</span>
+                                    <span className="text-gray-600 ml-1 font-medium">/7</span>
+                                  </div>
+                                </div>
+                                <div>
+                                  {userParticipation.progress >= 100 ? (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                      Complete
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                      In Progress
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                               
-                              {/* Daily Progress Counter */}
-                              <div className="mt-2">
-                                <h4 className="text-sm font-medium text-gray-700 mb-1">Daily Progress Update</h4>
-                                <div className="flex items-center space-x-2">
-                                  <button 
-                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300"
-                                    onClick={() => {
-                                      const input = document.getElementById('daily-progress-input') as HTMLInputElement;
-                                      const currentValue = parseInt(input.value) || 0;
-                                      if (currentValue > 0) {
-                                        input.value = (currentValue - 1).toString();
-                                      }
-                                    }}
-                                  >
-                                    -
-                                  </button>
-                                  <input
-                                    id="daily-progress-input"
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    defaultValue="5"
-                                    className="w-16 h-10 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-1 focus:ring-green-500"
-                                  />
-                                  <button 
-                                    className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300"
-                                    onClick={() => {
-                                      const input = document.getElementById('daily-progress-input') as HTMLInputElement;
-                                      const currentValue = parseInt(input.value) || 0;
-                                      input.value = (currentValue + 1).toString();
-                                    }}
-                                  >
-                                    +
-                                  </button>
-                                  <button
-                                    className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 ml-2"
-                                    onClick={() => {
-                                      const input = document.getElementById('daily-progress-input') as HTMLInputElement;
-                                      const dailyProgressValue = parseInt(input.value) || 0;
-                                      if (dailyProgressValue > 0) {
-                                        const newProgress = Math.min(userParticipation.progress + dailyProgressValue, 100);
-                                        updateProgress.mutate(newProgress);
-                                      }
-                                    }}
-                                    disabled={updateProgress.isPending}
-                                  >
-                                    {updateProgress.isPending ? "Adding..." : "Add Progress"}
-                                  </button>
+                              {/* Progress Bar Display */}
+                              <div className="mt-4 mb-2">
+                                <div className="w-full bg-gray-200 rounded-full h-3">
+                                  <div 
+                                    className="bg-green-600 h-3 rounded-full transition-all duration-300 ease-in-out" 
+                                    style={{ width: `${userParticipation.progress}%` }}
+                                  ></div>
                                 </div>
+                                <div className="flex justify-between mt-1">
+                                  <div className="grid grid-cols-7 w-full">
+                                    {[...Array(7)].map((_, i) => {
+                                      const dayComplete = userParticipation.progress >= ((i + 1) * 14.29);
+                                      return (
+                                        <div key={i} className="flex flex-col items-center">
+                                          <div className={`w-4 h-4 rounded-full ${dayComplete ? 'bg-green-600' : 'bg-gray-300'} mb-1`}></div>
+                                          <span className={`text-xs ${dayComplete ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                                            Day {i + 1}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Mark Today as Done Button */}
+                              <div className="mt-5">
+                                <button
+                                  className={`w-full py-3 text-white font-medium rounded-md flex items-center justify-center transition-all ${
+                                    userParticipation.progress >= 100 
+                                      ? 'bg-gray-400 cursor-not-allowed' 
+                                      : 'bg-green-600 hover:bg-green-700'
+                                  }`}
+                                  onClick={() => {
+                                    // Calculate current day based on progress (each day is 14.29% of progress)
+                                    const currentDay = Math.floor(userParticipation.progress / 14.29);
+                                    
+                                    // If we're not at 7 days yet, increment to the next day
+                                    if (currentDay < 7) {
+                                      const newProgress = Math.min((currentDay + 1) * 14.29, 100);
+                                      updateProgress.mutate(Math.round(newProgress));
+                                    }
+                                  }}
+                                  disabled={userParticipation.progress >= 100 || updateProgress.isPending}
+                                >
+                                  {updateProgress.isPending ? (
+                                    <div className="flex items-center">
+                                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      </svg>
+                                      Updating...
+                                    </div>
+                                  ) : userParticipation.progress >= 100 ? (
+                                    "Challenge Completed!"
+                                  ) : (
+                                    <>
+                                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                      </svg>
+                                      Mark Today as Done
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                              
+                              {/* Custom Progress Adjustment (Advanced) */}
+                              <div className="mt-4 pt-4 border-t border-gray-200">
+                                <details className="group">
+                                  <summary className="text-sm font-medium text-gray-700 cursor-pointer flex items-center">
+                                    <svg className="w-4 h-4 mr-1 group-open:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                    Advanced Progress Adjustment
+                                  </summary>
+                                  <div className="mt-3">
+                                    <div className="flex items-center space-x-2">
+                                      <button 
+                                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300"
+                                        onClick={() => {
+                                          const input = document.getElementById('daily-progress-input') as HTMLInputElement;
+                                          const currentValue = parseInt(input.value) || 0;
+                                          if (currentValue > 0) {
+                                            input.value = (currentValue - 1).toString();
+                                          }
+                                        }}
+                                      >
+                                        -
+                                      </button>
+                                      <input
+                                        id="daily-progress-input"
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        defaultValue="14"
+                                        className="w-16 h-10 border border-gray-300 rounded-md text-center focus:outline-none focus:ring-1 focus:ring-green-500"
+                                      />
+                                      <button 
+                                        className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300"
+                                        onClick={() => {
+                                          const input = document.getElementById('daily-progress-input') as HTMLInputElement;
+                                          const currentValue = parseInt(input.value) || 0;
+                                          input.value = (currentValue + 1).toString();
+                                        }}
+                                      >
+                                        +
+                                      </button>
+                                      <button
+                                        className="px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 ml-2"
+                                        onClick={() => {
+                                          const input = document.getElementById('daily-progress-input') as HTMLInputElement;
+                                          const dailyProgressValue = parseInt(input.value) || 0;
+                                          if (dailyProgressValue > 0) {
+                                            const newProgress = Math.min(userParticipation.progress + dailyProgressValue, 100);
+                                            updateProgress.mutate(newProgress);
+                                          }
+                                        }}
+                                        disabled={updateProgress.isPending}
+                                      >
+                                        {updateProgress.isPending ? "Adding..." : "Add Progress"}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </details>
                               </div>
                             </div>
                             
