@@ -23,6 +23,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import MemoryStore from "memorystore";
 import { WebSocketServer, WebSocket } from "ws";
+import blockchainRoutes from "./blockchain/routes";
 
 // Initialize the memory storage
 const storage = new MemStorage();
@@ -1088,6 +1089,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register the blockchain routes
+  apiRouter.use('/blockchain', blockchainRoutes);
+  
+  // Make the storage available to the routes
+  app.locals.storage = storage;
+  
   app.use('/api', apiRouter);
 
   const httpServer = createServer(app);
