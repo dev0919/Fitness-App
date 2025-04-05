@@ -136,12 +136,16 @@ const Login = () => {
               Connect with friends, track your progress, earn rewards, and transform your fitness experience with our innovative blockchain-powered platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="bg-[#4CAF50] hover:bg-[#388E3C] text-white py-6 px-8 rounded-lg text-lg">
-                Try Free Demo
-              </Button>
-              <Button variant="outline" className="border-[#4CAF50] text-[#4CAF50] hover:bg-[#E8F5E9] py-6 px-8 rounded-lg text-lg">
-                Learn More
-              </Button>
+              <Link href="/login">
+                <Button className="bg-[#4CAF50] hover:bg-[#388E3C] text-white py-6 px-8 rounded-lg text-lg">
+                  Try Free Demo
+                </Button>
+              </Link>
+              <Link href="/learn-more">
+                <Button variant="outline" className="border-[#4CAF50] text-[#4CAF50] hover:bg-[#E8F5E9] py-6 px-8 rounded-lg text-lg">
+                  Learn More
+                </Button>
+              </Link>
             </div>
           </div>
           <div className="md:w-1/2">
@@ -286,9 +290,11 @@ const Login = () => {
                 Get Started Now
               </Button>
             </Link>
-            <Button variant="outline" className="border-[#4CAF50] text-[#4CAF50] hover:bg-white text-lg px-8 py-6">
-              View Demo
-            </Button>
+            <Link href="/login">
+              <Button variant="outline" className="border-[#4CAF50] text-[#4CAF50] hover:bg-white text-lg px-8 py-6">
+                View Demo
+              </Button>
+            </Link>
           </div>
         </section>
       </main>
@@ -309,36 +315,42 @@ const Login = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Company</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">About Us</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Careers</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Contact</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Blog</a></li>
+              <li><Link href="/about" className="text-gray-400 hover:text-white">About Us</Link></li>
+              <li><Link href="/features" className="text-gray-400 hover:text-white">Features</Link></li>
+              <li><Link href="/pricing" className="text-gray-400 hover:text-white">Pricing</Link></li>
+              <li><Link href="/learn-more" className="text-gray-400 hover:text-white">Learn More</Link></li>
             </ul>
           </div>
           
           <div>
             <h4 className="text-lg font-semibold mb-4">Resources</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Documentation</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Help Center</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Privacy Policy</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Terms of Service</a></li>
+              <li><Link href="/learn-more" className="text-gray-400 hover:text-white">Documentation</Link></li>
+              <li><Link href="/learn-more" className="text-gray-400 hover:text-white">Help Center</Link></li>
+              <li><Link href="/about" className="text-gray-400 hover:text-white">Privacy Policy</Link></li>
+              <li><Link href="/about" className="text-gray-400 hover:text-white">Terms of Service</Link></li>
             </ul>
           </div>
           
           <div>
-            <h4 className="text-lg font-semibold mb-4">Connect</h4>
+            <h4 className="text-lg font-semibold mb-4">Account</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">Twitter</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Facebook</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Instagram</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Discord</a></li>
+              <li><Link href="/login" className="text-gray-400 hover:text-white">Login</Link></li>
+              <li><Link href="/register" className="text-gray-400 hover:text-white">Register</Link></li>
+              <li><Link href="/login" className="text-gray-400 hover:text-white">Demo Account</Link></li>
+              <li><Link href="/features" className="text-gray-400 hover:text-white">Features</Link></li>
             </ul>
           </div>
         </div>
         
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
           <p>&copy; {new Date().getFullYear()} FitConnect. All rights reserved.</p>
+          <div className="mt-2">
+            <Link href="/about" className="text-gray-400 hover:text-white mx-2">About</Link>
+            <Link href="/features" className="text-gray-400 hover:text-white mx-2">Features</Link>
+            <Link href="/pricing" className="text-gray-400 hover:text-white mx-2">Pricing</Link>
+            <Link href="/learn-more" className="text-gray-400 hover:text-white mx-2">Learn More</Link>
+          </div>
         </div>
       </footer>
     </div>

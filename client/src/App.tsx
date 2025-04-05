@@ -21,6 +21,10 @@ import FriendRequests from "@/pages/FriendRequests";
 import Chat from "@/pages/Chat";
 import Tokens from "@/pages/Tokens";
 import Rewards from "@/pages/Rewards";
+import About from "@/pages/About";
+import Features from "@/pages/Features";
+import Pricing from "@/pages/Pricing";
+import LearnMore from "@/pages/LearnMore";
 import { FitConnectLayout } from "@/components/layout/FitConnectLayout";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -53,6 +57,23 @@ function Router() {
 
   return (
     <Switch>
+      {/* Public pages */}
+      <Route path="/about">
+        <About />
+      </Route>
+      
+      <Route path="/features">
+        <Features />
+      </Route>
+      
+      <Route path="/pricing">
+        <Pricing />
+      </Route>
+      
+      <Route path="/learn-more">
+        <LearnMore />
+      </Route>
+      
       <Route path="/login">
         {user ? <Dashboard /> : <Login />}
       </Route>
