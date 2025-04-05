@@ -86,148 +86,145 @@ export default function ChatPage() {
   // Show loading if friend is being loaded
   if (isLoadingFriend && friendId) {
     return (
-      <FitConnectLayout>
-        <div className="flex h-full w-full items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </FitConnectLayout>
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
   
   return (
-    <FitConnectLayout>
-      <div className="container mx-auto h-full max-w-6xl px-4 py-6">
-        <h1 className="text-2xl font-bold mb-4">Messages</h1>
+    <div className="container mx-auto h-full max-w-6xl px-4 py-6">
+      <h1 className="text-2xl font-bold mb-4">Messages</h1>
+      
+      <div className="grid h-[calc(100vh-220px)] grid-cols-4 gap-4">
+        {/* Friends sidebar */}
+        <Card className="col-span-1 overflow-hidden">
+          <CardHeader className="p-4">
+            <CardTitle className="text-lg">Friends</CardTitle>
+          </CardHeader>
+          <ScrollArea className="h-[calc(100vh-300px)]">
+            <CardContent className="p-0">
+              {isLoadingFriends ? (
+                <div className="flex h-20 items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : !friends || friends.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-muted-foreground">
+                  No friends yet. Add friends to start chatting.
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {friends.map((friend) => (
+                    <button
+                      key={friend.id}
+                      onClick={() => selectChat(friend.id)}
+                      className={`w-full px-4 py-3 flex items-center space-x-3 hover:bg-muted transition-colors ${
+                        friendId === friend.id ? 'bg-muted' : ''
+                      }`}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={friend.profileImage || ''} alt={friend.username} />
+                        <AvatarFallback>
+                          {friend.firstName?.[0]}
+                          {friend.lastName?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{friend.firstName} {friend.lastName}</span>
+                        <span className="text-xs text-muted-foreground">@{friend.username}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </ScrollArea>
+        </Card>
         
-        <div className="grid h-[calc(100vh-220px)] grid-cols-4 gap-4">
-          {/* Friends sidebar */}
-          <Card className="col-span-1 overflow-hidden">
-            <CardHeader className="p-4">
-              <CardTitle className="text-lg">Friends</CardTitle>
-            </CardHeader>
-            <ScrollArea className="h-[calc(100vh-300px)]">
-              <CardContent className="p-0">
-                {isLoadingFriends ? (
-                  <div className="flex h-20 items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        {/* Chat area */}
+        <Card className="col-span-3 flex flex-col">
+          {friendId && friend ? (
+            <>
+              <CardHeader className="border-b p-4">
+                <div className="flex items-center space-x-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={friend.profileImage || ''} alt={friend.username} />
+                    <AvatarFallback>
+                      {friend.firstName?.[0]}
+                      {friend.lastName?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="text-lg">
+                      {friend.firstName} {friend.lastName}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">@{friend.username}</p>
                   </div>
-                ) : !friends || friends.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-muted-foreground">
-                    No friends yet. Add friends to start chatting.
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    {friends.map((friend) => (
-                      <button
-                        key={friend.id}
-                        onClick={() => selectChat(friend.id)}
-                        className={`w-full px-4 py-3 flex items-center space-x-3 hover:bg-muted transition-colors ${
-                          friendId === friend.id ? 'bg-muted' : ''
-                        }`}
-                      >
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={friend.profileImage || ''} alt={friend.username} />
-                          <AvatarFallback>
-                            {friend.firstName?.[0]}
-                            {friend.lastName?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">{friend.firstName} {friend.lastName}</span>
-                          <span className="text-xs text-muted-foreground">@{friend.username}</span>
+                </div>
+              </CardHeader>
+              
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4 pb-4">
+                  {conversation.length === 0 ? (
+                    <div className="flex h-40 items-center justify-center text-muted-foreground">
+                      No messages yet. Send a message to start the conversation.
+                    </div>
+                  ) : (
+                    conversation.map((message) => {
+                      const isOutgoing = message.sender === user?.id.toString();
+                      
+                      return (
+                        <div
+                          key={message.id}
+                          className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-[80%] rounded-lg p-3 ${
+                              isOutgoing
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted'
+                            }`}
+                          >
+                            <p>{message.content}</p>
+                            <p className={`text-xs mt-1 ${isOutgoing ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                              {formatTime(new Date(message.timestamp).toISOString())}
+                            </p>
+                          </div>
                         </div>
-                      </button>
-                    ))}
-                  </div>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+              
+              <CardContent className="border-t p-4">
+                <form onSubmit={handleSendMessage} className="flex space-x-2">
+                  <Input
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    placeholder="Type a message..."
+                    disabled={!connected || isSending}
+                    className="flex-1"
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    disabled={!messageText.trim() || !connected || isSending}
+                  >
+                    {isSending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </form>
+                {!connected && (
+                  <p className="mt-2 text-xs text-destructive">
+                    Not connected to chat server. Please try refreshing the page.
+                  </p>
                 )}
               </CardContent>
-            </ScrollArea>
-          </Card>
-          
-          {/* Chat area */}
-          <Card className="col-span-3 flex flex-col">
-            {friendId && friend ? (
-              <>
-                <CardHeader className="border-b p-4">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={friend.profileImage || ''} alt={friend.username} />
-                      <AvatarFallback>
-                        {friend.firstName?.[0]}
-                        {friend.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {friend.firstName} {friend.lastName}
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground">@{friend.username}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <ScrollArea className="flex-1 p-4">
-                  <div className="space-y-4 pb-4">
-                    {conversation.length === 0 ? (
-                      <div className="flex h-40 items-center justify-center text-muted-foreground">
-                        No messages yet. Send a message to start the conversation.
-                      </div>
-                    ) : (
-                      conversation.map((message) => {
-                        const isOutgoing = message.sender === user?.id.toString();
-                        
-                        return (
-                          <div
-                            key={message.id}
-                            className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'}`}
-                          >
-                            <div
-                              className={`max-w-[80%] rounded-lg p-3 ${
-                                isOutgoing
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted'
-                              }`}
-                            >
-                              <p>{message.content}</p>
-                              <p className={`text-xs mt-1 ${isOutgoing ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                                {formatTime(new Date(message.timestamp).toISOString())}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                </ScrollArea>
-                
-                <CardContent className="border-t p-4">
-                  <form onSubmit={handleSendMessage} className="flex space-x-2">
-                    <Input
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                      placeholder="Type a message..."
-                      disabled={!connected || isSending}
-                      className="flex-1"
-                    />
-                    <Button 
-                      type="submit" 
-                      size="icon" 
-                      disabled={!messageText.trim() || !connected || isSending}
-                    >
-                      {isSending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </form>
-                  {!connected && (
-                    <p className="mt-2 text-xs text-destructive">
-                      Not connected to chat server. Please try refreshing the page.
-                    </p>
-                  )}
-                </CardContent>
               </>
             ) : (
               <div className="flex h-full flex-col items-center justify-center p-6 text-center">
@@ -240,6 +237,5 @@ export default function ChatPage() {
           </Card>
         </div>
       </div>
-    </FitConnectLayout>
   );
 }
