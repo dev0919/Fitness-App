@@ -748,10 +748,11 @@ export class MemStorage implements IStorage {
     // Get all activities that are either:
     // 1. From the user's friends OR
     // 2. Posted by the current user (first user in userIds array is the current user)
-    const currentUserId = userIds[0]; // The first ID in the array is the current user's ID
     
+    // Make sure we're only including activities from users in the provided list
+    // This ensures we don't show demo user activities to non-demo users
     return Array.from(this.socialActivities.values())
-      .filter(activity => userIds.includes(activity.userId) || activity.userId === currentUserId)
+      .filter(activity => userIds.includes(activity.userId))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, limit);
   }

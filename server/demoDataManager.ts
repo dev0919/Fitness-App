@@ -29,6 +29,7 @@ export class DemoDataManager {
    */
   async initializeDemoData(): Promise<void> {
     if (this.initializedDemo) {
+      console.log('Demo data already initialized, skipping');
       return;
     }
 

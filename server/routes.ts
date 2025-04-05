@@ -105,23 +105,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Demo user protection middleware - prevents destructive operations on demo data
   const protectDemoData = (req: Request, res: Response, next: Function) => {
     if (req.isAuthenticated() && demoManager.isDemoUser((req.user as any).id)) {
-      // For demo users, we allow GET and some POST operations, but not destructive ones
-      if (req.method === 'DELETE' || 
-          (req.method === 'PATCH' && req.path.includes('/challenges/') && req.path.includes('/progress')) ||
-          (req.method === 'PUT' && req.path.includes('/nftbadges'))) {
-        // Allow these operations to proceed normally, as they don't permanently modify core demo data
+      console.log(`Demo user action: ${req.method} ${req.path}`);
+      
+      // For demo users, we allow GET requests and specific safe operations
+      if (req.method === 'GET') {
+        // Always allow GET requests
         return next();
       }
       
-      // For all other mutation operations, silently allow but don't actually change persistent data
-      if (req.method !== 'GET') {
+      // Specific operations that are allowed for demo users
+      const allowedOperations = [
+        // Allow updating challenge progress
+        (req.method === 'PATCH' && req.path.includes('/challenges/') && req.path.includes('/progress')),
+        // Allow updating NFT badges
+        (req.method === 'PUT' && req.path.includes('/nftbadges')),
+        // Allow creating new workouts
+        (req.method === 'POST' && req.path === '/api/workouts'),
+        // Allow updating workout completion
+        (req.method === 'PATCH' && req.path.includes('/workouts/')),
+        // Allow activities tracking 
+        (req.method === 'POST' && req.path === '/api/activities'),
+        // Allow social activity interactions
+        (req.method === 'POST' && req.path === '/api/social/activities'),
+        (req.method === 'POST' && req.path === '/api/social/interactions'),
+        // Allow wallet operations
+        (req.method === 'POST' && req.path === '/api/transactions'),
+        // Allow joining challenges
+        (req.method === 'POST' && req.path.includes('/challenges/') && req.path.includes('/join'))
+      ];
+      
+      if (allowedOperations.some(condition => condition)) {
+        console.log('Demo account: allowing safe operation');
+        return next();
+      }
+      
+      // For DELETE operations and other potentially destructive actions
+      if (req.method === 'DELETE' || 
+          (req.method === 'PATCH' && req.path !== '/api/activities') ||
+          req.method === 'PUT') {
         console.log('Demo account: preventing permanent data modification');
         // Return a success response without actually modifying the data
         return res.status(200).json({ message: 'Operation succeeded (demo mode)' });
       }
     }
     
-    // Not a demo user or a GET request, proceed normally
+    // Not a demo user, proceed normally
     return next();
   };
 
@@ -219,8 +247,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if this is the demo account (alex)
       const isDemoUser = demoManager.isDemoUsername(user.username);
       if (isDemoUser) {
+        console.log('Demo user detected, initializing demo data');
         // Initialize demo data if needed
         await demoManager.initializeDemoData();
+      } else {
+        console.log('Regular user login, skipping demo data initialization');
       }
       
       req.login(user, (err) => {
@@ -728,8 +759,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userIdsToFetch.push(...user.friends);
       }
       
+      console.log(`Getting friend activities for user ID ${userId} with friends: ${userIdsToFetch.join(', ')}`);
+      
       // Get activities from both the user and their friends
       const activities = await storage.getFriendActivities(userIdsToFetch);
+      
+      // Log the count of activities found
+      console.log(`Found ${activities.length} social activities for user ID ${userId} and friends`);
+      
       res.json(activities);
     } catch (error) {
       console.error("Error fetching friend activities:", error);
