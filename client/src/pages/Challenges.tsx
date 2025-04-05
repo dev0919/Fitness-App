@@ -14,10 +14,9 @@ const Challenges = () => {
     queryKey: [filter === "upcoming" ? '/api/challenges/upcoming' : '/api/challenges'],
   });
   
-  // Fetch user's joined challenges
+  // Fetch user's joined challenges (always fetch to check participation status)
   const { data: joinedChallenges, isLoading: isJoinedChallengesLoading } = useQuery({
     queryKey: ['/api/challenges/user/joined'],
-    enabled: filter === "joined",
   });
   
   const joinChallenge = useMutation({
@@ -49,6 +48,14 @@ const Challenges = () => {
       day: 'numeric',
       year: 'numeric'
     });
+  };
+  
+  // Check if a user has already joined a challenge
+  const isUserJoinedChallenge = (challengeId: number) => {
+    if (!Array.isArray(joinedChallenges)) return false;
+    return joinedChallenges.some((joinedChallenge: any) => 
+      joinedChallenge.challenge.id === challengeId
+    );
   };
   
   const formatTimeLeft = (endDate: string) => {
@@ -161,7 +168,7 @@ const Challenges = () => {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {Array.isArray(displayChallenges) && displayChallenges.length > 0 ? (
             displayChallenges.map((challenge: any) => {
-              const isJoined = filter === "joined";
+              const isJoined = filter === "joined" || isUserJoinedChallenge(challenge.id);
               const hasStarted = new Date(challenge.startDate) <= new Date();
               
               return (
@@ -217,7 +224,7 @@ const Challenges = () => {
                         <div className="w-full bg-[#E0E0E0] rounded-full h-2.5 mb-4">
                           <div 
                             className="bg-[#4CAF50] h-2.5 rounded-full" 
-                            style={{ width: `${challenge.participant.progress}%` }}
+                            style={{ width: `${challenge.participant?.progress || 0}%` }}
                           ></div>
                         </div>
                         <Link href={`/challenges/${challenge.id}`}>
@@ -232,10 +239,19 @@ const Challenges = () => {
                       <div className="space-y-2">
                         <button 
                           onClick={() => joinChallenge.mutate(challenge.id)}
-                          disabled={joinChallenge.isPending}
-                          className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50] disabled:opacity-75"
+                          disabled={joinChallenge.isPending || isUserJoinedChallenge(challenge.id)}
+                          className={`w-full flex items-center justify-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium ${
+                            isUserJoinedChallenge(challenge.id) 
+                              ? "border-[#9E9E9E] text-[#9E9E9E] bg-[#F5F5F5] cursor-not-allowed"
+                              : "border-transparent text-white bg-[#4CAF50] hover:bg-[#388E3C] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]"
+                          } disabled:opacity-75`}
                         >
-                          {joinChallenge.isPending ? 'Joining...' : 'Join Challenge'}
+                          {joinChallenge.isPending 
+                            ? 'Joining...' 
+                            : isUserJoinedChallenge(challenge.id) 
+                              ? 'Already Joined' 
+                              : 'Join Challenge'
+                          }
                         </button>
                         <Link href={`/challenges/${challenge.id}`}>
                           <button 
