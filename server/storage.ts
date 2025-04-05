@@ -479,7 +479,8 @@ export class MemStorage implements IStorage {
         userId,
         type: 'friend_added',
         content: `added ${friend.firstName} ${friend.lastName || ''} as a friend`,
-        relatedId: friendId
+        relatedId: friendId,
+        imageData: null
       });
     }
     
@@ -576,7 +577,8 @@ export class MemStorage implements IStorage {
       userId: workout.userId,
       type: 'workout_completed',
       content: `completed a ${workout.title} workout`,
-      relatedId: id
+      relatedId: id,
+      imageData: null
     });
     
     return newWorkout;
@@ -703,7 +705,8 @@ export class MemStorage implements IStorage {
         userId: participant.userId,
         type: 'challenge_joined',
         content: `joined the "${challenge.title}" challenge`,
-        relatedId: challenge.id
+        relatedId: challenge.id,
+        imageData: null
       });
     }
     
@@ -725,7 +728,8 @@ export class MemStorage implements IStorage {
           userId: participant.userId,
           type: 'challenge_completed',
           content: `completed the "${challenge.title}" challenge`,
-          relatedId: challenge.id
+          relatedId: challenge.id,
+          imageData: null
         });
       }
     }
@@ -760,7 +764,13 @@ export class MemStorage implements IStorage {
   async createSocialActivity(activity: InsertSocialActivity): Promise<SocialActivity> {
     const id = this.socialActivityIdCounter++;
     const createdAt = new Date();
-    const newActivity: SocialActivity = { ...activity, id, createdAt };
+    const newActivity: SocialActivity = { 
+      ...activity, 
+      id, 
+      createdAt,
+      imageData: activity.imageData || null,
+      relatedId: activity.relatedId || null
+    };
     this.socialActivities.set(id, newActivity);
     return newActivity;
   }
@@ -779,7 +789,12 @@ export class MemStorage implements IStorage {
   async createSocialInteraction(interaction: InsertSocialInteraction): Promise<SocialInteraction> {
     const id = this.socialInteractionIdCounter++;
     const createdAt = new Date();
-    const newInteraction: SocialInteraction = { ...interaction, id, createdAt };
+    const newInteraction: SocialInteraction = { 
+      ...interaction, 
+      id, 
+      createdAt,
+      content: interaction.content || null 
+    };
     this.socialInteractions.set(id, newInteraction);
     return newInteraction;
   }

@@ -139,6 +139,7 @@ export const demoSocialActivities: Omit<SocialActivity, "id">[] = [
     type: "workout_completed",
     content: "Just crushed a 10K run! Feeling amazing! 🏃‍♀️",
     relatedId: null,
+    imageData: null,
     createdAt: new Date(Date.now() - 86400000 * 2), // 2 days ago
   },
   {
@@ -146,6 +147,7 @@ export const demoSocialActivities: Omit<SocialActivity, "id">[] = [
     type: "challenge_joined",
     content: "I've joined the Weekly Plank Challenge. Who's with me?",
     relatedId: 2, // Weekly Plank challenge ID
+    imageData: null,
     createdAt: new Date(Date.now() - 86400000 * 3), // 3 days ago
   },
   {
@@ -153,6 +155,7 @@ export const demoSocialActivities: Omit<SocialActivity, "id">[] = [
     type: "badge_earned",
     content: "Just earned the 'Early Bird' badge for 5 consecutive morning workouts!",
     relatedId: null,
+    imageData: null,
     createdAt: new Date(Date.now() - 86400000 * 4), // 4 days ago
   },
   {
@@ -160,6 +163,7 @@ export const demoSocialActivities: Omit<SocialActivity, "id">[] = [
     type: "workout_completed",
     content: "Upper body day complete! 💪",
     relatedId: 2, // Refers to the Upper Body Strength workout
+    imageData: null,
     createdAt: new Date(Date.now() - 86400000 * 3), // 3 days ago
   }
 ];
