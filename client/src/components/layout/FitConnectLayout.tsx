@@ -7,9 +7,9 @@ interface FitConnectLayoutProps {
 
 export const FitConnectLayout: React.FC<FitConnectLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col max-w-full">
       <TopNavbar />
-      <main className="flex-1 overflow-auto pb-4">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto pb-4 w-full">
         {children}
       </main>
     </div>

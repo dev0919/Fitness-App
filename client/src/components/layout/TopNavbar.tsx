@@ -65,15 +65,15 @@ export const TopNavbar = () => {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex">
+    <nav className="bg-white shadow-md w-full overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex justify-between h-16 w-full overflow-hidden">
+          <div className="flex overflow-hidden">
             <div className="flex-shrink-0 flex items-center">
               <h1 className="text-[#4CAF50] font-bold text-xl">FitConnect</h1>
             </div>
             {/* Desktop menu */}
-            <div className="hidden md:ml-6 md:flex md:items-center md:space-x-4">
+            <div className="hidden md:ml-6 md:flex md:items-center md:space-x-4 overflow-x-auto">
               <NavItem
                 href="/dashboard"
                 icon="fa-home"
@@ -172,8 +172,8 @@ export const TopNavbar = () => {
 
       {/* Mobile menu, show/hide based on menu state. */}
       {mobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="pt-2 pb-3 space-y-1">
+        <div className="md:hidden w-full overflow-x-hidden">
+          <div className="pt-2 pb-3 space-y-1 w-full">
             <NavItem
               href="/dashboard"
               icon="fa-home"

@@ -157,8 +157,8 @@ export default function FriendsPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+    <div className="container mx-auto py-8 overflow-x-hidden">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 w-full">
           <h1 className="text-3xl font-bold">Friends</h1>
           <div className="flex space-x-3 mt-3 sm:mt-0">
             <Button 
@@ -168,11 +168,11 @@ export default function FriendsPage() {
             >
               <Bell className="h-4 w-4 mr-2" />
               Friend Requests
-              {pendingRequests && pendingRequests.length > 0 && (
+              {pendingRequests && Array.isArray(pendingRequests) && pendingRequests.length > 0 ? (
                 <span className="ml-2 bg-primary text-primary-foreground text-xs rounded-full px-2 py-0.5">
                   {pendingRequests.length}
                 </span>
-              )}
+              ) : null}
             </Button>
           </div>
         </div>
@@ -230,7 +230,7 @@ export default function FriendsPage() {
                       </div>
                     </div>
                     {currentUser && friends && friends.some(friend => friend.id === foundUser.id) ? (
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -305,7 +305,7 @@ export default function FriendsPage() {
               </div>
             )}
 
-            {!isLoadingFriends && !isErrorFriends && friends && friends.length === 0 && (
+            {!isLoadingFriends && !isErrorFriends && friends && Array.isArray(friends) && friends.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <p>You haven't added any friends yet.</p>
                 <p className="text-sm mt-2">
@@ -314,9 +314,9 @@ export default function FriendsPage() {
               </div>
             )}
 
-            {!isLoadingFriends && !isErrorFriends && friends && friends.length > 0 && (
+            {!isLoadingFriends && !isErrorFriends && friends && Array.isArray(friends) && friends.length > 0 && (
               <div className="space-y-4">
-                {friends.map((friend) => (
+                {friends.map((friend: any) => (
                   <div
                     key={friend.id}
                     className="flex items-center justify-between border-b pb-4 last:border-0"
@@ -337,7 +337,7 @@ export default function FriendsPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -383,7 +383,7 @@ export default function FriendsPage() {
                 <p className="text-xs text-muted-foreground mt-1 text-center md:text-left">Share this code with friends so they can add you</p>
               </div>
               <p className="text-sm text-muted-foreground">
-                {friends ? `${friends.length} friend${friends.length !== 1 ? 's' : ''}` : 'Loading...'}
+                {friends && Array.isArray(friends) ? `${friends.length} friend${friends.length !== 1 ? 's' : ''}` : 'Loading...'}
               </p>
             </div>
           </CardFooter>

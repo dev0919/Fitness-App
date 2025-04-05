@@ -93,10 +93,10 @@ export default function ChatPage() {
   }
   
   return (
-    <div className="container mx-auto h-full max-w-6xl px-4 py-6">
+    <div className="container mx-auto h-full max-w-6xl px-4 py-6 overflow-x-hidden">
       <h1 className="text-2xl font-bold mb-4">Messages</h1>
       
-      <div className="grid h-[calc(100vh-220px)] grid-cols-4 gap-4">
+      <div className="grid h-[calc(100vh-220px)] grid-cols-1 md:grid-cols-4 gap-4 overflow-hidden">
         {/* Friends sidebar */}
         <Card className="col-span-1 overflow-hidden">
           <CardHeader className="p-4">
@@ -108,13 +108,13 @@ export default function ChatPage() {
                 <div className="flex h-20 items-center justify-center">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
-              ) : !friends || friends.length === 0 ? (
+              ) : !friends || (Array.isArray(friends) && friends.length === 0) ? (
                 <div className="px-4 py-3 text-sm text-muted-foreground">
                   No friends yet. Add friends to start chatting.
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {friends.map((friend) => (
+                  {Array.isArray(friends) && friends.map((friend: any) => (
                     <button
                       key={friend.id}
                       onClick={() => selectChat(friend.id)}
@@ -148,17 +148,17 @@ export default function ChatPage() {
               <CardHeader className="border-b p-4">
                 <div className="flex items-center space-x-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={friend.profileImage || ''} alt={friend.username} />
+                    <AvatarImage src={(friend as any).profileImage || ''} alt={(friend as any).username} />
                     <AvatarFallback>
-                      {friend.firstName?.[0]}
-                      {friend.lastName?.[0]}
+                      {(friend as any).firstName?.[0]}
+                      {(friend as any).lastName?.[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <CardTitle className="text-lg">
-                      {friend.firstName} {friend.lastName}
+                      {(friend as any).firstName} {(friend as any).lastName}
                     </CardTitle>
-                    <p className="text-xs text-muted-foreground">@{friend.username}</p>
+                    <p className="text-xs text-muted-foreground">@{(friend as any).username}</p>
                   </div>
                 </div>
               </CardHeader>
