@@ -133,7 +133,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Allow joining challenges
         (req.method === 'POST' && req.path.includes('/challenges/') && req.path.includes('/join')),
         // Allow accepting friend requests
-        (req.method === 'PATCH' && req.path.includes('/api/friend-requests/'))
+        (req.method === 'PATCH' && req.path.includes('/api/friend-requests/')),
+        // Allow removing friends
+        (req.method === 'DELETE' && req.path.includes('/api/friends/remove/'))
       ];
       
       if (allowedOperations.some(condition => condition)) {
@@ -142,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // For DELETE operations and other potentially destructive actions
-      if (req.method === 'DELETE' || 
+      if ((req.method === 'DELETE' && !req.path.includes('/api/friends/remove/')) || 
           (req.method === 'PATCH' && 
            req.path !== '/api/activities' && 
            !req.path.includes('/api/friend-requests/')) ||
