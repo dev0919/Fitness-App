@@ -1,10 +1,11 @@
-import { Activity } from "@shared/schema";
+import { Activity, User } from "@shared/schema";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 type ActivityChartProps = {
   weeklyActivities: Activity[];
+  userData?: User;
 };
 
 // Helper function to format day
@@ -24,7 +25,7 @@ const calculateHeight = (activity: Activity, maxValue: number): string => {
   return `${percentage}%`;
 };
 
-export const ActivityChart = ({ weeklyActivities }: ActivityChartProps) => {
+export const ActivityChart = ({ weeklyActivities, userData }: ActivityChartProps) => {
   const [chartType, setChartType] = useState<'steps' | 'calories' | 'active'>('steps');
   const [animatedActivities, setAnimatedActivities] = useState<Activity[]>([]);
   
@@ -95,13 +96,18 @@ export const ActivityChart = ({ weeklyActivities }: ActivityChartProps) => {
     let goalPercentage;
     switch (chartType) {
       case 'steps':
-        goalPercentage = value / 10000; // Assuming 10k steps goal
+        // Use user's custom step goal or default to 10k
+        const dailyStepGoal = userData?.dailyStepGoal || 10000;
+        goalPercentage = value / dailyStepGoal;
         break;
       case 'calories':
-        goalPercentage = value / 500; // Assuming 500 cal goal
+        // Use user's custom calorie goal or default to 500
+        const dailyCalorieGoal = userData?.dailyCalorieGoal || 500;
+        goalPercentage = value / dailyCalorieGoal;
         break;
       case 'active':
-        goalPercentage = value / 60; // Assuming 60 min goal
+        // Use 60 minutes as default goal for active time
+        goalPercentage = value / 60;
         break;
       default:
         goalPercentage = 0.5;
@@ -140,13 +146,17 @@ export const ActivityChart = ({ weeklyActivities }: ActivityChartProps) => {
         <TabsContent value="steps" className="mt-0">
           <div className="flex flex-col space-y-1">
             <span className="text-sm font-medium">Daily Step Count</span>
-            <span className="text-xs text-muted-foreground">Goal: 10,000 steps per day</span>
+            <span className="text-xs text-muted-foreground">
+              Goal: {userData?.dailyStepGoal?.toLocaleString() || '10,000'} steps per day
+            </span>
           </div>
         </TabsContent>
         <TabsContent value="calories" className="mt-0">
           <div className="flex flex-col space-y-1">
             <span className="text-sm font-medium">Calories Burned</span>
-            <span className="text-xs text-muted-foreground">Goal: 500 calories per day</span>
+            <span className="text-xs text-muted-foreground">
+              Goal: {userData?.dailyCalorieGoal?.toLocaleString() || '500'} calories per day
+            </span>
           </div>
         </TabsContent>
         <TabsContent value="active" className="mt-0">

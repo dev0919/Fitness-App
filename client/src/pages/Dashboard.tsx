@@ -233,7 +233,8 @@ const Dashboard = () => {
   // Form schema for goal settings
   const GoalSettingsSchema = z.object({
     dailyStepGoal: z.coerce.number().min(1000, "Step goal must be at least 1,000").max(100000, "Step goal cannot exceed 100,000"),
-    dailyCalorieGoal: z.coerce.number().min(100, "Calorie goal must be at least 100").max(5000, "Calorie goal cannot exceed 5,000")
+    dailyCalorieGoal: z.coerce.number().min(100, "Calorie goal must be at least 100").max(5000, "Calorie goal cannot exceed 5,000"),
+    weeklyWorkoutGoal: z.coerce.number().min(1, "Weekly workout goal must be at least 1").max(14, "Weekly workout goal cannot exceed 14")
   });
 
   // Settings form
@@ -241,7 +242,8 @@ const Dashboard = () => {
     resolver: zodResolver(GoalSettingsSchema),
     defaultValues: {
       dailyStepGoal: userData?.dailyStepGoal || 10000,
-      dailyCalorieGoal: userData?.dailyCalorieGoal || 500
+      dailyCalorieGoal: userData?.dailyCalorieGoal || 500,
+      weeklyWorkoutGoal: userData?.weeklyWorkoutGoal || 5
     }
   });
 
@@ -250,7 +252,8 @@ const Dashboard = () => {
     if (userData) {
       goalSettingsForm.reset({
         dailyStepGoal: userData.dailyStepGoal || 10000,
-        dailyCalorieGoal: userData.dailyCalorieGoal || 500
+        dailyCalorieGoal: userData.dailyCalorieGoal || 500,
+        weeklyWorkoutGoal: userData?.weeklyWorkoutGoal || 5
       });
     }
   }, [userData]);
@@ -313,7 +316,7 @@ const Dashboard = () => {
   
   const calculateWorkoutProgress = () => {
     const workouts = dashboardData?.stats.workouts || 0;
-    const goal = 5; // Weekly workout goal
+    const goal = userData?.weeklyWorkoutGoal || 5; // Use user's custom goal or default
     const percentage = Math.min(Math.round((workouts / goal) * 100), 100);
     return {
       percentage,
@@ -444,6 +447,30 @@ const Dashboard = () => {
                         </FormItem>
                       )}
                     />
+
+                    <FormField
+                      control={goalSettingsForm.control}
+                      name="weeklyWorkoutGoal"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Weekly Workout Goal</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="5" 
+                              {...field}
+                              min="1"
+                              max="14"
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <p className="text-sm text-muted-foreground">
+                            Recommended: 3-5 workouts per week
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     
                     <SheetFooter>
                       <Button 
@@ -523,15 +550,48 @@ const Dashboard = () => {
       
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Steps Today"
-          value={dashboardData?.stats.steps.toLocaleString() || "0"}
-          icon="fa-shoe-prints"
-          iconBgColor="bg-[#81C784]"
-          iconColor="text-[#388E3C]"
-          progress={stepProgress.percentage}
-          goalText={stepProgress.goalText}
-        />
+        <div className="relative">
+          <StatsCard
+            title="Steps Today"
+            value={dashboardData?.stats.steps.toLocaleString() || "0"}
+            icon="fa-shoe-prints"
+            iconBgColor="bg-[#81C784]"
+            iconColor="text-[#388E3C]"
+            progress={stepProgress.percentage}
+            goalText={stepProgress.goalText}
+          />
+          <button 
+            onClick={() => {
+              const steps = window.prompt("Enter step count for today:", dashboardData?.stats.steps.toString());
+              if (steps !== null) {
+                const stepsNum = parseInt(steps, 10);
+                if (!isNaN(stepsNum) && stepsNum >= 0) {
+                  apiRequest('POST', '/api/activities/log', {
+                    steps: stepsNum
+                  }).then(() => {
+                    queryClient.invalidateQueries({ queryKey: ['/api/stats/current'] });
+                    addNotification(`Updated step count to ${stepsNum}`, "goal");
+                    toast({
+                      title: "Steps Updated",
+                      description: `Your step count has been updated to ${stepsNum}.`
+                    });
+                  }).catch(error => {
+                    console.error("Failed to update steps:", error);
+                    toast({
+                      title: "Error",
+                      description: "Failed to update step count.",
+                      variant: "destructive"
+                    });
+                  });
+                }
+              }
+            }}
+            className="absolute bottom-2 right-2 bg-green-100 hover:bg-green-200 text-green-800 rounded p-1"
+            title="Update Steps"
+          >
+            <RefreshCcw className="w-4 h-4" />
+          </button>
+        </div>
         
         <StatsCard
           title="Calories Burned"
@@ -577,7 +637,7 @@ const Dashboard = () => {
           <div className="px-4 py-5 sm:p-6">
             <div className="h-80">
               {dashboardData?.weeklyActivities && (
-                <ActivityChart weeklyActivities={dashboardData.weeklyActivities} />
+                <ActivityChart weeklyActivities={dashboardData.weeklyActivities} userData={userData} />
               )}
             </div>
           </div>
