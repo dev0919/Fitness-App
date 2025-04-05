@@ -136,7 +136,7 @@ const Login = () => {
               Connect with friends, track your progress, earn rewards, and transform your fitness experience with our innovative blockchain-powered platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/login">
+              <Link href="/register">
                 <Button className="bg-[#4CAF50] hover:bg-[#388E3C] text-white py-6 px-8 rounded-lg text-lg">
                   Try Free Demo
                 </Button>
@@ -290,7 +290,7 @@ const Login = () => {
                 Get Started Now
               </Button>
             </Link>
-            <Link href="/login">
+            <Link href="/register">
               <Button variant="outline" className="border-[#4CAF50] text-[#4CAF50] hover:bg-white text-lg px-8 py-6">
                 View Demo
               </Button>

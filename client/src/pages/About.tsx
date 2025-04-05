@@ -74,33 +74,7 @@ const About = () => {
             </p>
           </section>
 
-          {/* Team Section */}
-          <section className="mb-16">
-            <h2 className="text-2xl font-bold text-[#212121] mb-6">Our Team</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="w-32 h-32 bg-[#E8F5E9] rounded-full mx-auto flex items-center justify-center mb-4">
-                  <span className="text-[#4CAF50] text-4xl font-bold">AJ</span>
-                </div>
-                <h3 className="text-lg font-semibold text-[#212121]">Alex Johnson</h3>
-                <p className="text-[#616161]">Founder & CEO</p>
-              </div>
-              <div className="text-center">
-                <div className="w-32 h-32 bg-[#E8F5E9] rounded-full mx-auto flex items-center justify-center mb-4">
-                  <span className="text-[#4CAF50] text-4xl font-bold">SL</span>
-                </div>
-                <h3 className="text-lg font-semibold text-[#212121]">Sarah Lee</h3>
-                <p className="text-[#616161]">Chief Technology Officer</p>
-              </div>
-              <div className="text-center">
-                <div className="w-32 h-32 bg-[#E8F5E9] rounded-full mx-auto flex items-center justify-center mb-4">
-                  <span className="text-[#4CAF50] text-4xl font-bold">MP</span>
-                </div>
-                <h3 className="text-lg font-semibold text-[#212121]">Michael Patel</h3>
-                <p className="text-[#616161]">Head of Community</p>
-              </div>
-            </div>
-          </section>
+
 
           {/* Values Section */}
           <section>
