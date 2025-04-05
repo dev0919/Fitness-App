@@ -623,27 +623,6 @@ const Dashboard = () => {
         />
       </div>
       
-      {/* Weekly Activity Chart */}
-      <div className="mt-8">
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="px-4 py-5 sm:px-6 border-b border-[#E0E0E0]">
-            <h3 className="text-lg leading-6 font-medium text-[#212121]">
-              Weekly Activity
-            </h3>
-            <p className="mt-1 text-sm text-[#616161]">
-              Your activity over the past 7 days
-            </p>
-          </div>
-          <div className="px-4 py-5 sm:p-6">
-            <div className="h-80">
-              {dashboardData?.weeklyActivities && (
-                <ActivityChart weeklyActivities={dashboardData.weeklyActivities} userData={userData} />
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-      
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Workouts */}
         <RecentWorkouts workouts={dashboardData?.recentWorkouts || []} />

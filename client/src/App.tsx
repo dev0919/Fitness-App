@@ -14,11 +14,10 @@ import Community from "@/pages/Community";
 import Profile from "@/pages/Profile";
 import EditProfile from "@/pages/EditProfile";
 import Settings from "@/pages/Settings";
-import Friends from "@/pages/Friends";
+import FriendsAndChat from "@/pages/Friends";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import FriendRequests from "@/pages/FriendRequests";
-import Chat from "@/pages/Chat";
 import Tokens from "@/pages/Tokens";
 import Rewards from "@/pages/Rewards";
 import About from "@/pages/About";
@@ -179,10 +178,18 @@ function Router() {
         ) : <Login />}
       </Route>
       
+      <Route path="/friends/:id">
+        {user ? (
+          <FitConnectLayout>
+            <FriendsAndChat />
+          </FitConnectLayout>
+        ) : <Login />}
+      </Route>
+      
       <Route path="/friends">
         {user ? (
           <FitConnectLayout>
-            <Friends />
+            <FriendsAndChat />
           </FitConnectLayout>
         ) : <Login />}
       </Route>
@@ -195,10 +202,11 @@ function Router() {
         ) : <Login />}
       </Route>
       
+      {/* Redirect old chat routes to friends page with chat tab activated */}
       <Route path="/chat/:id">
         {user ? (
           <FitConnectLayout>
-            <Chat />
+            <FriendsAndChat />
           </FitConnectLayout>
         ) : <Login />}
       </Route>
@@ -206,7 +214,7 @@ function Router() {
       <Route path="/chat">
         {user ? (
           <FitConnectLayout>
-            <Chat />
+            <FriendsAndChat />
           </FitConnectLayout>
         ) : <Login />}
       </Route>

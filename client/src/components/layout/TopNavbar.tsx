@@ -101,14 +101,8 @@ export const TopNavbar = () => {
               <NavItem
                 href="/friends"
                 icon="fa-user-friends"
-                label="Friends"
-                isActive={location === "/friends"}
-              />
-              <NavItem
-                href="/chat"
-                icon="fa-comment"
-                label="Chat"
-                isActive={location.startsWith("/chat")}
+                label="Friends & Chat"
+                isActive={location === "/friends" || location.startsWith("/chat")}
               />
               <NavItem
                 href="/tokens"
@@ -205,15 +199,8 @@ export const TopNavbar = () => {
             <NavItem
               href="/friends"
               icon="fa-user-friends"
-              label="Friends"
-              isActive={location === "/friends"}
-              onClick={closeMobileMenu}
-            />
-            <NavItem
-              href="/chat"
-              icon="fa-comment"
-              label="Chat"
-              isActive={location.startsWith("/chat")}
+              label="Friends & Chat"
+              isActive={location === "/friends" || location.startsWith("/chat")}
               onClick={closeMobileMenu}
             />
             <NavItem
