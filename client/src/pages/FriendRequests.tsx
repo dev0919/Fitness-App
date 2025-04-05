@@ -82,7 +82,6 @@ export default function FriendRequestsPage() {
   };
   
   return (
-    <FitConnectLayout>
       <div className="container mx-auto max-w-6xl px-4 py-6">
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between">
@@ -308,6 +307,5 @@ export default function FriendRequestsPage() {
           </Tabs>
         </div>
       </div>
-    </FitConnectLayout>
   );
 }

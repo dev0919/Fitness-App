@@ -131,7 +131,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Allow wallet operations
         (req.method === 'POST' && req.path === '/api/transactions'),
         // Allow joining challenges
-        (req.method === 'POST' && req.path.includes('/challenges/') && req.path.includes('/join'))
+        (req.method === 'POST' && req.path.includes('/challenges/') && req.path.includes('/join')),
+        // Allow accepting friend requests
+        (req.method === 'PATCH' && req.path.includes('/api/friend-requests/'))
       ];
       
       if (allowedOperations.some(condition => condition)) {
@@ -141,7 +143,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // For DELETE operations and other potentially destructive actions
       if (req.method === 'DELETE' || 
-          (req.method === 'PATCH' && req.path !== '/api/activities') ||
+          (req.method === 'PATCH' && 
+           req.path !== '/api/activities' && 
+           !req.path.includes('/api/friend-requests/')) ||
           req.method === 'PUT') {
         console.log('Demo account: preventing permanent data modification');
         // Return a success response without actually modifying the data
