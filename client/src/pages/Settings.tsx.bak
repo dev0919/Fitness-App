@@ -5,9 +5,6 @@ import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLocation, Link } from "wouter";
-import { NFTBadges } from "@/components/profile/NFTBadges";
-import { useAuth } from "@/hooks/use-auth";
 import {
   Form,
   FormControl,
@@ -19,7 +16,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { LogOut } from "lucide-react";
 
 // Profile update schema
 const profileSchema = z.object({
@@ -44,25 +40,11 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 
 const Settings = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<'profile' | 'account' | 'notifications' | 'privacy'>('profile');
-  const { logout } = useAuth();
-  const [_, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<'account' | 'notifications' | 'privacy'>('account');
   
   // Fetch user data
   const { data: user, isLoading } = useQuery({
     queryKey: ['/api/auth/me'],
-  });
-  
-  // Fetch user's workouts
-  const { data: workouts, isLoading: isWorkoutsLoading } = useQuery({
-    queryKey: ['/api/workouts'],
-    enabled: !!user,
-  });
-  
-  // Fetch user's activities
-  const { data: activities, isLoading: isActivitiesLoading } = useQuery({
-    queryKey: ['/api/activities'],
-    enabled: !!user,
   });
   
   // Profile form
@@ -155,17 +137,6 @@ const Settings = () => {
     changePassword.mutate(data);
   };
   
-  // Handle logout
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
-  
-  // Calculate stats for profile overview
-  const totalWorkouts = workouts?.length || 0;
-  const totalDistance = workouts?.reduce((acc: number, workout: any) => acc + (workout.distance || 0), 0) || 0;
-  const totalCalories = workouts?.reduce((acc: number, workout: any) => acc + (workout.caloriesBurned || 0), 0) || 0;
-  
   if (isLoading) {
     return (
       <div className="px-4 py-6 md:px-8">
@@ -187,7 +158,7 @@ const Settings = () => {
       <div className="md:flex md:items-center md:justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-[#212121]">Settings</h2>
-          <p className="text-[#616161] mt-1">Manage your account preferences and profile</p>
+          <p className="text-[#616161] mt-1">Manage your account preferences</p>
         </div>
       </div>
       
@@ -196,21 +167,6 @@ const Settings = () => {
         <div className="md:w-64 flex-shrink-0">
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <ul>
-              <li>
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className={`w-full text-left px-4 py-3 ${
-                    activeTab === 'profile' 
-                      ? 'bg-[#F5F5F5] border-l-4 border-[#4CAF50]' 
-                      : 'border-l-4 border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <i className={`fas fa-id-card mr-3 ${activeTab === 'profile' ? 'text-[#4CAF50]' : 'text-[#616161]'}`}></i>
-                    <span>Profile</span>
-                  </div>
-                </button>
-              </li>
               <li>
                 <button
                   onClick={() => setActiveTab('account')}
@@ -256,136 +212,12 @@ const Settings = () => {
                   </div>
                 </button>
               </li>
-              <li className="border-t border-gray-200 mt-2">
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <div className="flex items-center">
-                    <i className="fas fa-sign-out-alt mr-3"></i>
-                    <span>Logout</span>
-                  </div>
-                </button>
-              </li>
             </ul>
           </div>
         </div>
         
         {/* Content */}
         <div className="flex-1">
-          {activeTab === 'profile' && (
-            <div className="space-y-6">
-              {/* Profile Header */}
-              <div className="bg-white shadow rounded-lg overflow-hidden mb-6">
-                <div className="p-6">
-                  <div className="sm:flex sm:items-center sm:justify-between">
-                    <div className="sm:flex sm:space-x-5">
-                      <div className="flex-shrink-0">
-                        <img 
-                          className="mx-auto h-20 w-20 rounded-full object-cover" 
-                          src={user?.profileImage || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName || ''}&background=random`} 
-                          alt={`${user?.firstName} ${user?.lastName || ''}`}
-                        />
-                      </div>
-                      <div className="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
-                        <p className="text-xl font-bold text-[#212121]">{user?.firstName} {user?.lastName}</p>
-                        <p className="text-sm text-[#616161]">@{user?.username}</p>
-                        <p className="text-sm text-[#9E9E9E] mt-1">{user?.email}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Stats summary */}
-                <div className="border-t border-[#E0E0E0] bg-[#F5F5F5]">
-                  <dl className="grid grid-cols-3 divide-x divide-[#E0E0E0]">
-                    <div className="px-4 py-3 sm:p-4 text-center">
-                      <dt className="text-sm font-medium text-[#616161] truncate">Workouts</dt>
-                      <dd className="mt-1 text-xl font-semibold text-[#4CAF50]">{totalWorkouts}</dd>
-                    </div>
-                    <div className="px-4 py-3 sm:p-4 text-center">
-                      <dt className="text-sm font-medium text-[#616161] truncate">Distance</dt>
-                      <dd className="mt-1 text-xl font-semibold text-[#4CAF50]">{(totalDistance / 1000).toFixed(1)} km</dd>
-                    </div>
-                    <div className="px-4 py-3 sm:p-4 text-center">
-                      <dt className="text-sm font-medium text-[#616161] truncate">Calories</dt>
-                      <dd className="mt-1 text-xl font-semibold text-[#4CAF50]">{totalCalories.toLocaleString()}</dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-              
-              {/* Recent Workouts */}
-              <div className="bg-white shadow rounded-lg overflow-hidden">
-                <div className="px-4 py-5 sm:px-6 border-b border-[#E0E0E0] flex justify-between items-center">
-                  <h3 className="text-lg leading-6 font-medium text-[#212121]">
-                    Recent Workouts
-                  </h3>
-                  <Link href="/workouts">
-                    <span className="text-sm text-[#4CAF50] hover:text-[#388E3C] cursor-pointer">
-                      View all
-                    </span>
-                  </Link>
-                </div>
-                <div>
-                  {isWorkoutsLoading ? (
-                    <div className="animate-pulse p-4 space-y-3">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="h-16 bg-gray-200 rounded"></div>
-                      ))}
-                    </div>
-                  ) : workouts && workouts.length > 0 ? (
-                    <ul className="divide-y divide-[#E0E0E0]">
-                      {workouts.slice(0, 3).map((workout: any) => (
-                        <li key={workout.id} className="px-4 py-4 hover:bg-[#F5F5F5]">
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-[#81C784] flex items-center justify-center">
-                                <i className={`fas ${workout.type === 'run' ? 'fa-running' : 'fa-dumbbell'} text-[#4CAF50]`}></i>
-                              </div>
-                              <div className="ml-3">
-                                <p className="text-sm font-medium text-[#212121]">{workout.title}</p>
-                                <p className="text-xs text-[#9E9E9E]">
-                                  {workout.distance ? `${(workout.distance / 1000).toFixed(1)} km • ` : ''}
-                                  {workout.duration} min
-                                </p>
-                              </div>
-                            </div>
-                            <p className="text-xs text-[#9E9E9E]">
-                              {new Date(workout.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-center py-6">
-                      <p className="text-[#9E9E9E]">No workouts recorded yet</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* NFT Badges */}
-              <div className="bg-white shadow rounded-lg overflow-hidden">
-                <div className="px-6 py-5 border-b border-[#E0E0E0]">
-                  <h3 className="text-lg leading-6 font-medium text-[#212121]">NFT Badges</h3>
-                  <p className="mt-1 text-sm text-[#616161]">
-                    Display your Web3 fitness achievements and memberships
-                  </p>
-                </div>
-                <div className="px-6 py-5">
-                  <NFTBadges 
-                    userId={user?.id as number} 
-                    walletAddress={user?.walletAddress} 
-                    nftBadges={user?.nftBadges || []} 
-                    isOwnProfile={true}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-          
           {activeTab === 'account' && (
             <div className="space-y-6">
               {/* Profile Information */}
@@ -573,25 +405,30 @@ const Settings = () => {
                   <li className="py-4 flex justify-between items-center">
                     <div>
                       <p className="text-sm font-medium text-[#212121]">Challenge Updates</p>
-                      <p className="text-xs text-[#616161]">Get updates about challenges you've joined</p>
+                      <p className="text-xs text-[#616161]">Notifications about challenges you're participating in</p>
                     </div>
                     <Switch defaultChecked={true} />
                   </li>
                   <li className="py-4 flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium text-[#212121]">Token Rewards</p>
-                      <p className="text-xs text-[#616161]">Notifications when you earn fitness tokens</p>
+                      <p className="text-sm font-medium text-[#212121]">New Challenges</p>
+                      <p className="text-xs text-[#616161]">Get notified when new challenges are available</p>
                     </div>
-                    <Switch defaultChecked={true} />
+                    <Switch defaultChecked={false} />
                   </li>
                   <li className="py-4 flex justify-between items-center">
                     <div>
                       <p className="text-sm font-medium text-[#212121]">Email Notifications</p>
-                      <p className="text-xs text-[#616161]">Receive important updates via email</p>
+                      <p className="text-xs text-[#616161]">Receive digest emails about your fitness progress</p>
                     </div>
-                    <Switch defaultChecked={true} />
+                    <Switch defaultChecked={false} />
                   </li>
                 </ul>
+                <div className="pt-4">
+                  <Button className="bg-[#4CAF50] hover:bg-[#388E3C]">
+                    Save Preferences
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -603,7 +440,7 @@ const Settings = () => {
                   Privacy Settings
                 </h3>
                 <p className="mt-1 text-sm text-[#616161]">
-                  Control your data and profile visibility
+                  Control your data and activity visibility
                 </p>
               </div>
               <div className="px-4 py-5 sm:p-6">
@@ -611,39 +448,52 @@ const Settings = () => {
                   <li className="py-4 flex justify-between items-center">
                     <div>
                       <p className="text-sm font-medium text-[#212121]">Profile Visibility</p>
-                      <p className="text-xs text-[#616161]">Allow others to see your profile information</p>
+                      <p className="text-xs text-[#616161]">Who can see your profile information</p>
+                    </div>
+                    <select className="border border-[#E0E0E0] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#4CAF50] focus:border-[#4CAF50]">
+                      <option value="public">Everyone</option>
+                      <option value="friends">Friends Only</option>
+                      <option value="private">Private</option>
+                    </select>
+                  </li>
+                  <li className="py-4 flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium text-[#212121]">Workout Sharing</p>
+                      <p className="text-xs text-[#616161]">Who can see your workouts</p>
+                    </div>
+                    <select className="border border-[#E0E0E0] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#4CAF50] focus:border-[#4CAF50]">
+                      <option value="public">Everyone</option>
+                      <option value="friends">Friends Only</option>
+                      <option value="private">Private</option>
+                    </select>
+                  </li>
+                  <li className="py-4 flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium text-[#212121]">Activity Stats</p>
+                      <p className="text-xs text-[#616161]">Share your activity statistics with friends</p>
                     </div>
                     <Switch defaultChecked={true} />
                   </li>
                   <li className="py-4 flex justify-between items-center">
                     <div>
-                      <p className="text-sm font-medium text-[#212121]">Workout Visibility</p>
-                      <p className="text-xs text-[#616161]">Let friends see your completed workouts</p>
+                      <p className="text-sm font-medium text-[#212121]">Location Sharing</p>
+                      <p className="text-xs text-[#616161]">Allow app to use your location for tracking</p>
                     </div>
                     <Switch defaultChecked={true} />
-                  </li>
-                  <li className="py-4 flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-[#212121]">Activity Feed</p>
-                      <p className="text-xs text-[#616161]">Share your fitness activities on the community feed</p>
-                    </div>
-                    <Switch defaultChecked={true} />
-                  </li>
-                  <li className="py-4 flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-[#212121]">Location Data</p>
-                      <p className="text-xs text-[#616161]">Share your location with workout activities</p>
-                    </div>
-                    <Switch defaultChecked={false} />
                   </li>
                   <li className="py-4 flex justify-between items-center">
                     <div>
                       <p className="text-sm font-medium text-[#212121]">Data Analytics</p>
-                      <p className="text-xs text-[#616161]">Allow anonymized usage for platform improvements</p>
+                      <p className="text-xs text-[#616161]">Allow us to use your data for service improvements</p>
                     </div>
-                    <Switch defaultChecked={true} />
+                    <Switch defaultChecked={false} />
                   </li>
                 </ul>
+                <div className="pt-4">
+                  <Button className="bg-[#4CAF50] hover:bg-[#388E3C]">
+                    Save Privacy Settings
+                  </Button>
+                </div>
               </div>
             </div>
           )}

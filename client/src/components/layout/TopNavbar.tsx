@@ -101,7 +101,7 @@ export const TopNavbar = () => {
               <NavItem
                 href="/friends"
                 icon="fa-user-friends"
-                label="Friends & Chat"
+                label="Friends"
                 isActive={location === "/friends" || location.startsWith("/chat")}
               />
               <NavItem
@@ -110,12 +110,7 @@ export const TopNavbar = () => {
                 label="Rewards"
                 isActive={location === "/tokens" || location === "/rewards"}
               />
-              <NavItem
-                href="/profile"
-                icon="fa-user"
-                label="Profile"
-                isActive={location === "/profile"}
-              />
+
               <NavItem
                 href="/settings"
                 icon="fa-cog"
@@ -199,7 +194,7 @@ export const TopNavbar = () => {
             <NavItem
               href="/friends"
               icon="fa-user-friends"
-              label="Friends & Chat"
+              label="Friends"
               isActive={location === "/friends" || location.startsWith("/chat")}
               onClick={closeMobileMenu}
             />
@@ -210,13 +205,7 @@ export const TopNavbar = () => {
               isActive={location === "/tokens" || location === "/rewards"}
               onClick={closeMobileMenu}
             />
-            <NavItem
-              href="/profile"
-              icon="fa-user"
-              label="Profile"
-              isActive={location === "/profile"}
-              onClick={closeMobileMenu}
-            />
+
             <NavItem
               href="/settings"
               icon="fa-cog"

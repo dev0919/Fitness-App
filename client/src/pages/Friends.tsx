@@ -226,7 +226,7 @@ export default function FriendsAndChatPage() {
   return (
     <div className="container mx-auto py-8 overflow-x-hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 w-full">
-          <h1 className="text-3xl font-bold">Friends & Chat</h1>
+          <h1 className="text-3xl font-bold">Friends</h1>
           <div className="flex space-x-3 mt-3 sm:mt-0">
             <Button 
               variant="outline" 
