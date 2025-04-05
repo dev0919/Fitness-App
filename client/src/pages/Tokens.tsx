@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { queryClient } from "@/lib/queryClient";
-import { transferTokens, isValidWalletAddress, truncateAddress } from "@/lib/blockchain";
 import { formatDistanceToNow } from "date-fns";
 
 import {
@@ -56,9 +55,6 @@ const Tokens = () => {
   const [_, navigate] = useLocation();
   const [walletAddress, setWalletAddress] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
-  const [transferAmount, setTransferAmount] = useState("");
-  const [transferSuccess, setTransferSuccess] = useState(false);
 
   // Query wallet data
   const {
@@ -98,35 +94,6 @@ const Tokens = () => {
   } = useQuery({
     queryKey: ["/api/purchases"],
     enabled: !!user,
-  });
-
-  // Mutation to transfer tokens to blockchain wallet
-  const transferTokensMutation = useMutation({
-    mutationFn: async ({ wallet, amount }: { wallet: string; amount: string }) => {
-      return transferTokens({ wallet, amount });
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/wallet"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      setTransferSuccess(true);
-      toast({
-        title: "Transfer Successful",
-        description: `${data.amount} $FITCOIN has been sent to ${truncateAddress(data.recipient)}`,
-      });
-      // Reset form after 2 seconds to let user see the success state
-      setTimeout(() => {
-        setTransferAmount("");
-        setTransferSuccess(false);
-        setIsTransferDialogOpen(false);
-      }, 2000);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Transfer Failed",
-        description: error.message || "Failed to transfer tokens. Please try again.",
-        variant: "destructive",
-      });
-    },
   });
 
   // Mutation to connect external wallet
@@ -211,47 +178,6 @@ const Tokens = () => {
       return;
     }
     connectWalletMutation.mutate(walletAddress);
-  };
-  
-  // Handle token transfer form submission
-  const handleTransferTokens = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!wallet?.walletAddress) {
-      toast({
-        title: "Error",
-        description: "No wallet connected. Please connect an external wallet first.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Validate amount
-    const amountNum = parseFloat(transferAmount);
-    if (isNaN(amountNum) || amountNum <= 0) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid amount greater than 0",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Validate user has enough balance
-    if (wallet.balance && BigInt(transferAmount) > BigInt(wallet.balance)) {
-      toast({
-        title: "Error",
-        description: "Insufficient balance for this transfer",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Execute transfer
-    transferTokensMutation.mutate({
-      wallet: wallet.walletAddress,
-      amount: transferAmount,
-    });
   };
 
   // State for purchase confirmation
@@ -389,21 +315,10 @@ const Tokens = () => {
           <CardFooter>
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <AlertDialogTrigger asChild>
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline">
-                    <Wallet className="mr-2 h-4 w-4" />
-                    {wallet?.walletAddress ? "Update Wallet Address" : "Connect Wallet"}
-                  </Button>
-                  {wallet?.walletAddress && (
-                    <Button 
-                      variant="secondary"
-                      onClick={() => { setIsTransferDialogOpen(true); }}
-                    >
-                      <ArrowUpRight className="mr-2 h-4 w-4" />
-                      Transfer Tokens
-                    </Button>
-                  )}
-                </div>
+                <Button variant="outline">
+                  <Wallet className="mr-2 h-4 w-4" />
+                  {wallet?.walletAddress ? "Update Wallet Address" : "Connect Wallet"}
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -715,63 +630,6 @@ const Tokens = () => {
           </Card>
         </TabsContent>
       </Tabs>
-      
-      {/* Token Transfer Dialog */}
-      <AlertDialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Transfer $FITCOIN to Blockchain</AlertDialogTitle>
-            <AlertDialogDescription>
-              Transfer your $FITCOIN to your connected external wallet ({truncateAddress(wallet?.walletAddress || "")}).
-              This will update your balance on the blockchain and allow you to use your tokens outside of the app.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <form onSubmit={handleTransferTokens}>
-            <div className="py-4">
-              <Label htmlFor="transferAmount">Amount to Transfer</Label>
-              <div className="flex items-center mt-2">
-                <Input
-                  id="transferAmount"
-                  type="number"
-                  placeholder="0"
-                  value={transferAmount}
-                  onChange={(e) => setTransferAmount(e.target.value)}
-                  className="flex-1"
-                  disabled={transferTokensMutation.isPending || transferSuccess}
-                />
-                <span className="ml-2">$FITCOIN</span>
-              </div>
-              {wallet && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Available: {wallet.balance || "0"} $FITCOIN
-                </p>
-              )}
-            </div>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={transferTokensMutation.isPending || transferSuccess}>
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                type="submit"
-                disabled={transferTokensMutation.isPending || transferSuccess || !wallet?.walletAddress}
-              >
-                {transferTokensMutation.isPending ? (
-                  <span className="flex items-center">
-                    <span className="mr-2">Processing...</span>
-                  </span>
-                ) : transferSuccess ? (
-                  <span className="flex items-center">
-                    <Check className="mr-2 h-4 w-4" />
-                    Transferred
-                  </span>
-                ) : (
-                  "Transfer Tokens"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </form>
-        </AlertDialogContent>
-      </AlertDialog>
       
       {/* Purchase Confirmation Dialog */}
       <AlertDialog open={purchaseConfirmOpen} onOpenChange={setPurchaseConfirmOpen}>
