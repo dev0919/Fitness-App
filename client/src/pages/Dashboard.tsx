@@ -258,21 +258,25 @@ const Dashboard = () => {
   // Goal settings mutation
   const updateGoalsMutation = useMutation({
     mutationFn: async (data: z.infer<typeof GoalSettingsSchema>) => {
-      return apiRequest(`/api/users/${userData?.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data)
-      });
+      if (!userData?.id) {
+        throw new Error("User not authenticated");
+      }
+      return apiRequest(
+        'PATCH',
+        `/api/users/${userData.id}`,
+        data
+      );
     },
     onSuccess: () => {
       toast({
         title: "Goals updated",
         description: "Your fitness goals have been updated successfully.",
-        variant: "success",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
       addNotification("Fitness goals updated", "goal");
     },
     onError: (error) => {
+      console.error("Goal update error:", error);
       toast({
         title: "Error",
         description: "Failed to update goals. Please try again.",
