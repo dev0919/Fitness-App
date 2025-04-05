@@ -29,6 +29,7 @@ interface RewardProduct {
   name: string;
   description: string;
   price: string;
+  fitCoinPrice: string; // FitCoin price for platform currency purchases
   image: string;
   category: 'digital' | 'physical' | 'badge';
 }
@@ -59,13 +60,14 @@ interface Wallet {
   walletAddress: string | null;
 }
 
-// Mock reward products with MATIC prices
+// Reward products with both MATIC and FitCoin prices
 const rewardProducts: RewardProduct[] = [
   {
     id: 'premium-badge-1',
     name: 'Premium Trophy Badge',
     description: 'Show off your dedication with this exclusive digital trophy',
     price: '0.01',
+    fitCoinPrice: '150',
     image: '🏆',
     category: 'badge'
   },
@@ -74,6 +76,7 @@ const rewardProducts: RewardProduct[] = [
     name: 'Elite Fitness Badge',
     description: 'Elite status badge visible on your profile',
     price: '0.02',
+    fitCoinPrice: '250',
     image: '💪',
     category: 'badge'
   },
@@ -82,6 +85,7 @@ const rewardProducts: RewardProduct[] = [
     name: 'Exclusive HIIT Workout Plan',
     description: 'Get access to our premium 12-week HIIT workout program',
     price: '0.05',
+    fitCoinPrice: '400',
     image: '📱',
     category: 'digital'
   },
@@ -90,6 +94,7 @@ const rewardProducts: RewardProduct[] = [
     name: 'Custom Nutrition Plan',
     description: 'Digital nutrition guide tailored to your fitness goals',
     price: '0.03',
+    fitCoinPrice: '300',
     image: '🥗',
     category: 'digital'
   },
@@ -98,6 +103,7 @@ const rewardProducts: RewardProduct[] = [
     name: 'FitConnect Athletic Shirt',
     description: 'Premium workout shirt with FitConnect logo (shipping included)',
     price: '0.1',
+    fitCoinPrice: '800',
     image: '👕',
     category: 'physical'
   },
@@ -106,6 +112,7 @@ const rewardProducts: RewardProduct[] = [
     name: 'Smart Water Bottle',
     description: 'Track your hydration with our smart water bottle',
     price: '0.08',
+    fitCoinPrice: '600',
     image: '🍶',
     category: 'physical'
   }
@@ -189,11 +196,69 @@ const Rewards = () => {
     });
   };
   
-  const handlePurchase = async (product: RewardProduct) => {
+  // State to track which payment method is selected (MATIC or FitCoins)
+  const [paymentMethod, setPaymentMethod] = useState<'matic' | 'fitcoin'>('matic');
+
+  // Handle FitCoin purchase through the backend API
+  const handleFitCoinPurchase = async (product: RewardProduct) => {
+    try {
+      setPurchaseInProgress(true);
+      
+      // Check if user has enough FitCoins
+      if (!walletData || parseInt(walletData.balance) < parseInt(product.fitCoinPrice)) {
+        toast({
+          title: "Insufficient FitCoins",
+          description: `You need ${product.fitCoinPrice} FitCoins to purchase this item. Complete more activities to earn more!`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Make API request to purchase with FitCoins
+      const response = await apiRequest<any>('/api/purchases', 'POST', {
+        itemId: product.id,
+        quantity: 1,
+        paymentMethod: 'fitcoin',
+        totalPrice: product.fitCoinPrice
+      });
+      
+      if (response) {
+        toast({
+          title: "Purchase Successful!",
+          description: `You purchased ${product.name} for ${product.fitCoinPrice} FitCoins!`,
+          variant: "default"
+        });
+        
+        // Refresh wallet and purchases data
+        setTimeout(() => {
+          // Trigger refetch of wallet and purchases data
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error processing FitCoin purchase:", error);
+      toast({
+        title: "Purchase Failed",
+        description: "There was an error processing your FitCoin purchase. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setPurchaseInProgress(false);
+    }
+  };
+
+  // Main purchase handler that routes to appropriate purchase method
+  const handlePurchase = async (product: RewardProduct, method: 'matic' | 'fitcoin') => {
+    if (method === 'fitcoin') {
+      await handleFitCoinPurchase(product);
+      return;
+    }
+    
+    // MATIC purchase requires wallet connection
     if (!walletConnected) {
       toast({
         title: "Wallet Not Connected",
-        description: "Please connect your wallet to purchase this product.",
+        description: "Please connect your wallet to purchase this product with MATIC.",
         variant: "destructive"
       });
       return;
@@ -206,15 +271,15 @@ const Rewards = () => {
       if (txHash) {
         toast({
           title: "Purchase Successful!",
-          description: `You purchased ${product.name}. It will be delivered soon!`,
+          description: `You purchased ${product.name} with MATIC. It will be delivered soon!`,
           variant: "default"
         });
       }
     } catch (error) {
-      console.error("Error processing purchase:", error);
+      console.error("Error processing MATIC purchase:", error);
       toast({
         title: "Purchase Failed",
-        description: "There was an error processing your purchase. Please try again.",
+        description: "There was an error processing your MATIC purchase. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -227,26 +292,26 @@ const Rewards = () => {
       <div className="flex flex-col items-start gap-6">
         <div className="w-full">
           <h1 className="text-3xl font-bold mb-2">Rewards & Marketplace</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-6">
             Earn FitCoins through activities, connect your crypto wallet, and purchase exclusive rewards.
           </p>
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="mb-6 grid grid-cols-2 lg:grid-cols-4">
-            <TabsTrigger value="wallet">
+          <TabsList className="rounded-lg bg-slate-100 p-1">
+            <TabsTrigger value="wallet" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Coins className="w-4 h-4 mr-2" />
               FitCoins
             </TabsTrigger>
-            <TabsTrigger value="store">
+            <TabsTrigger value="store" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <ShoppingBag className="w-4 h-4 mr-2" />
               Reward Store
             </TabsTrigger>
-            <TabsTrigger value="history">
+            <TabsTrigger value="history" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <History className="w-4 h-4 mr-2" />
               Transaction History
             </TabsTrigger>
-            <TabsTrigger value="purchases">
+            <TabsTrigger value="purchases" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Package className="w-4 h-4 mr-2" />
               Your Purchases
             </TabsTrigger>
@@ -427,19 +492,43 @@ const Rewards = () => {
                             <CardDescription>{product.description}</CardDescription>
                           </CardHeader>
                           <CardContent>
-                            <p className="text-lg font-semibold">
-                              {product.price} MATIC
-                            </p>
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">MATIC Price:</span>
+                                <span className="text-sm font-semibold">{product.price} MATIC</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">FitCoin Price:</span>
+                                <span className="text-sm font-semibold">{product.fitCoinPrice} FC</span>
+                              </div>
+                            </div>
                           </CardContent>
-                          <CardFooter>
-                            <Button 
-                              className="w-full" 
-                              onClick={() => handlePurchase(product)}
-                              disabled={!walletConnected || purchaseInProgress}
-                            >
-                              {purchaseInProgress ? "Processing..." : "Purchase"} 
-                              <ChevronRight className="ml-2 h-4 w-4" />
-                            </Button>
+                          <CardFooter className="flex flex-col gap-2">
+                            <div className="flex gap-2 w-full">
+                              <Button 
+                                className="flex-1" 
+                                onClick={() => handlePurchase(product, 'matic')}
+                                disabled={!walletConnected || purchaseInProgress}
+                                variant="outline"
+                              >
+                                <Wallet className="h-4 w-4 mr-2" />
+                                MATIC
+                              </Button>
+                              <Button 
+                                className="flex-1" 
+                                onClick={() => handlePurchase(product, 'fitcoin')}
+                                disabled={purchaseInProgress}
+                                variant="default"
+                              >
+                                <Coins className="h-4 w-4 mr-2" />
+                                FitCoins
+                              </Button>
+                            </div>
+                            {purchaseInProgress && (
+                              <div className="text-center text-sm text-muted-foreground">
+                                Processing purchase...
+                              </div>
+                            )}
                           </CardFooter>
                         </Card>
                       ))
