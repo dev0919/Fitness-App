@@ -215,12 +215,16 @@ const Rewards = () => {
       }
       
       // Make API request to purchase with FitCoins
-      const response = await apiRequest<any>('/api/purchases', 'POST', {
-        itemId: product.id,
-        quantity: 1,
-        paymentMethod: 'fitcoin',
-        totalPrice: product.fitCoinPrice
-      });
+      const response = await apiRequest(
+        'POST', 
+        '/api/purchases', 
+        {
+          itemId: product.id,
+          quantity: 1,
+          paymentMethod: 'fitcoin',
+          totalPrice: product.fitCoinPrice
+        }
+      );
       
       if (response) {
         toast({
