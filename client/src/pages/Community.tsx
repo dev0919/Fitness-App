@@ -222,21 +222,29 @@ const Community = () => {
     }
   };
   
-  // Enhancing activities with user data (in a real app this would be server-side)
+  // Get current user data for use in posts
+  const { data: currentUser } = useQuery({
+    queryKey: ['/api/auth/me'],
+    retry: false,
+    refetchOnWindowFocus: false
+  });
+
+  // Enhancing activities with user data
   const enhancedActivities = activities ? 
-    activities.map((activity: SocialActivity, index: number) => {
-      const mockFriend = MOCK_FRIENDS[index % MOCK_FRIENDS.length];
+    activities.map((activity: SocialActivity) => {
+      // For each activity, use the current user's data
+      // (In a real app with multiple users, this would fetch actual user data from the server)
       return {
         activity,
         user: {
-          id: mockFriend.id,
-          name: mockFriend.name,
-          avatar: mockFriend.avatar
+          id: activity.userId,
+          name: currentUser?.username || "User",
+          avatar: `/avatars/avatar${activity.userId % 8 + 1}.png` // Use a deterministic avatar based on user ID
         },
         interactions: {
-          likes: Math.floor(Math.random() * 20) + 1,
+          likes: activity.likeCount || 0,
           likedByCurrentUser: false,
-          comments: Math.floor(Math.random() * 5)
+          comments: activity.commentCount || 0
         }
       };
     }) : [];
