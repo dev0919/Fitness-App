@@ -23,9 +23,13 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import MemoryStore from "memorystore";
 import { WebSocketServer, WebSocket } from "ws";
+import { DemoDataManager } from "./demoDataManager";
 
 // Initialize the memory storage
 const storage = new MemStorage();
+
+// Initialize demo data manager
+const demoManager = new DemoDataManager(storage);
 
 const Session = MemoryStore(session);
 
@@ -97,9 +101,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.status(401).json({ message: 'Unauthorized' });
   };
+  
+  // Demo user protection middleware - prevents destructive operations on demo data
+  const protectDemoData = (req: Request, res: Response, next: Function) => {
+    if (req.isAuthenticated() && demoManager.isDemoUser((req.user as any).id)) {
+      // For demo users, we allow GET and some POST operations, but not destructive ones
+      if (req.method === 'DELETE' || 
+          (req.method === 'PATCH' && req.path.includes('/challenges/') && req.path.includes('/progress')) ||
+          (req.method === 'PUT' && req.path.includes('/nftbadges'))) {
+        // Allow these operations to proceed normally, as they don't permanently modify core demo data
+        return next();
+      }
+      
+      // For all other mutation operations, silently allow but don't actually change persistent data
+      if (req.method !== 'GET') {
+        console.log('Demo account: preventing permanent data modification');
+        // Return a success response without actually modifying the data
+        return res.status(200).json({ message: 'Operation succeeded (demo mode)' });
+      }
+    }
+    
+    // Not a demo user or a GET request, proceed normally
+    return next();
+  };
 
   // API Routes - all prefixed with /api
   const apiRouter = express.Router();
+  
+  // Apply the demo data protection middleware to all API routes
+  apiRouter.use(protectDemoData);
 
   // AUTH ROUTES
   apiRouter.post('/auth/register', async (req, res) => {
@@ -146,7 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post('/auth/login', (req, res, next) => {
     console.log('Login attempt:', req.body);
     
-    passport.authenticate('local', (err: any, user: any, info: any) => {
+    passport.authenticate('local', async (err: any, user: any, info: any) => {
       if (err) {
         console.error('Login error:', err);
         return res.status(500).json({ message: 'Internal server error during login' });
@@ -158,6 +188,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log('User authenticated, logging in:', user.username);
+      
+      // Check if this is the demo account (alex)
+      const isDemoUser = demoManager.isDemoUsername(user.username);
+      if (isDemoUser) {
+        // Initialize demo data if needed
+        await demoManager.initializeDemoData();
+      }
+      
       req.login(user, (err) => {
         if (err) {
           console.error('Error during login:', err);
@@ -181,7 +219,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     })(req, res, next);
   });
 
-  apiRouter.post('/auth/logout', (req, res) => {
+  apiRouter.post('/auth/logout', async (req, res) => {
+    // Check if this is the demo user before we log them out
+    const isDemoUser = req.isAuthenticated() && demoManager.isDemoUser((req.user as any).id);
+    
+    if (isDemoUser) {
+      // For demo users, reset data to original demo state on logout
+      await demoManager.resetDemoData();
+    }
+    
     req.logout((err) => {
       if (err) {
         return res.status(500).json({ message: 'Error during logout' });
