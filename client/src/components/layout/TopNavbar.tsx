@@ -105,8 +105,14 @@ export const TopNavbar = () => {
               <NavItem
                 href="/tokens"
                 icon="fa-coins"
+                label="Tokens"
+                isActive={location === "/tokens"}
+              />
+              <NavItem
+                href="/rewards"
+                icon="fa-gift"
                 label="Rewards"
-                isActive={location === "/tokens" || location === "/rewards"}
+                isActive={location === "/rewards"}
               />
 
               <NavItem
@@ -192,8 +198,15 @@ export const TopNavbar = () => {
             <NavItem
               href="/tokens"
               icon="fa-coins"
+              label="Tokens"
+              isActive={location === "/tokens"}
+              onClick={closeMobileMenu}
+            />
+            <NavItem
+              href="/rewards"
+              icon="fa-gift"
               label="Rewards"
-              isActive={location === "/tokens" || location === "/rewards"}
+              isActive={location === "/rewards"}
               onClick={closeMobileMenu}
             />
 

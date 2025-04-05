@@ -1,22 +1,21 @@
-// Simple configuration file for Web3 integration
-
-// Alchemy API key for NFT fetching
-export const alchemyApiKey = import.meta.env.VITE_ALCHEMY_API_KEY || '';
-
-// Project ID for WalletConnect (you need to get this from cloud.walletconnect.com)
-export const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '';
-
-// Define supported chain names (for reference)
-export const supportedChains = ['ethereum', 'sepolia'];
-
-// Helper function to format Ethereum addresses
-export function formatAddress(address: string | undefined): string {
-  if (!address) return '';
-  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+// Define the Ethereum object type for the window
+declare global {
+  interface Window {
+    ethereum: any;
+  }
 }
 
-// Helper function to check if an address is valid
-export function isValidAddress(address: string | undefined): boolean {
+// Alchemy API key - replace with your actual key
+export const alchemyApiKey = "demo";
+
+// Format an Ethereum address for display (truncate middle)
+export const formatAddress = (address: string): string => {
+  if (!address) return '';
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};
+
+// Check if a string is a valid Ethereum address
+export const isValidAddress = (address: string): boolean => {
   if (!address) return false;
   return /^0x[a-fA-F0-9]{40}$/.test(address);
-}
+};
