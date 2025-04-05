@@ -2,6 +2,17 @@ import { pgTable, text, serial, integer, boolean, timestamp, json, numeric, varc
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// NFT Badge type definition
+export interface NFTBadge {
+  id: string;              // Token ID
+  contractAddress: string; // NFT contract address
+  name: string;            // NFT name
+  description?: string;    // NFT description
+  image: string;           // NFT image URL
+  tokenType: string;       // ERC721 or ERC1155
+  category?: string;       // Custom category for the badge (fitness, achievement, etc.)
+}
+
 // User schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -13,6 +24,8 @@ export const users = pgTable("users", {
   profileImage: text("profile_image"),
   friendCode: text("friend_code").unique(),
   friends: json("friends").$type<number[]>().default([]),
+  walletAddress: varchar("wallet_address", { length: 42 }),
+  nftBadges: json("nft_badges").$type<NFTBadge[]>().default([]),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -24,6 +37,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   profileImage: true,
   friendCode: true,
   friends: true,
+  walletAddress: true,
+  nftBadges: true,
 });
 
 // Workout schema

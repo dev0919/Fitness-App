@@ -3,6 +3,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Link, useParams } from "wouter";
+import { NFTBadges } from "@/components/profile/NFTBadges";
 
 const Profile = () => {
   const { toast } = useToast();
@@ -269,12 +270,33 @@ const Profile = () => {
       )}
       
       {activeTab === 'achievements' && (
-        <div className="bg-white shadow rounded-lg p-6 text-center">
-          <div className="h-16 w-16 mx-auto bg-[#F5F5F5] rounded-full flex items-center justify-center mb-4">
-            <i className="fas fa-medal text-[#9E9E9E] text-2xl"></i>
+        <div className="space-y-6">
+          {/* Traditional Achievements */}
+          <div className="bg-white shadow rounded-lg p-6 text-center">
+            <div className="h-16 w-16 mx-auto bg-[#F5F5F5] rounded-full flex items-center justify-center mb-4">
+              <i className="fas fa-medal text-[#9E9E9E] text-2xl"></i>
+            </div>
+            <h3 className="text-lg font-medium text-[#212121]">Achievements Coming Soon</h3>
+            <p className="text-[#616161] mt-1">Track your progress and earn achievements as you reach fitness milestones</p>
           </div>
-          <h3 className="text-lg font-medium text-[#212121]">Achievements Coming Soon</h3>
-          <p className="text-[#616161] mt-1">Track your progress and earn achievements as you reach fitness milestones</p>
+          
+          {/* NFT Badges */}
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="px-6 py-5 border-b border-[#E0E0E0]">
+              <h3 className="text-lg leading-6 font-medium text-[#212121]">NFT Badges</h3>
+              <p className="mt-1 text-sm text-[#616161]">
+                Display your Web3 fitness achievements and memberships
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <NFTBadges 
+                userId={userId || (user?.id as number)} 
+                walletAddress={user?.walletAddress} 
+                nftBadges={user?.nftBadges || []} 
+                isOwnProfile={isOwnProfile}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

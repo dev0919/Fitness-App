@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isValidAddress } from "@/lib/web3Config";
 import {
   Form,
   FormControl,
@@ -28,6 +29,11 @@ const profileSchema = z.object({
   profileImage: z.string().optional(),
   username: z.string().min(3, "Username must be at least 3 characters"),
   bio: z.string().optional(),
+  walletAddress: z.string().optional()
+    .refine(
+      (val) => !val || isValidAddress(val),
+      { message: "Invalid Ethereum wallet address format" }
+    ),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -55,6 +61,7 @@ const EditProfile = () => {
       profileImage: "",
       username: "",
       bio: "",
+      walletAddress: "",
     },
   });
   
@@ -67,6 +74,7 @@ const EditProfile = () => {
       profileImage: user.profileImage || "",
       username: user.username || "",
       bio: user.bio || "",
+      walletAddress: user.walletAddress || "",
     });
     
     if (user.profileImage) {
@@ -158,9 +166,10 @@ const EditProfile = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="basic" className="w-full" value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="photo">Profile Photo</TabsTrigger>
+              <TabsTrigger value="web3">Web3</TabsTrigger>
             </TabsList>
             
             <TabsContent value="basic">
@@ -326,6 +335,78 @@ const EditProfile = () => {
                     {isLoading ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="web3">
+              <div className="space-y-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-medium text-[#212121]">Web3 Wallet Connection</h3>
+                  <p className="text-sm text-[#616161] mt-1">
+                    Connect your Ethereum wallet to display your NFT badges and fitness achievements
+                  </p>
+                </div>
+                
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="walletAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ethereum Wallet Address</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="0x..." 
+                              {...field}
+                              className="font-mono text-sm"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                          <p className="text-xs text-[#616161] mt-1">
+                            Enter your Ethereum wallet address to display your NFT badges on your profile
+                          </p>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="pt-2">
+                      <div className="bg-[#F5F5F5] rounded-md p-4">
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0">
+                            <i className="fas fa-info-circle text-[#7C4DFF] mt-1"></i>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium text-[#212121]">About Web3 Integration</h4>
+                            <ul className="mt-1 text-xs text-[#616161] space-y-1 list-disc pl-4">
+                              <li>FitConnect can display fitness-related NFT badges from your wallet</li>
+                              <li>We only read from your wallet - we never request transaction signing</li>
+                              <li>After connecting, refresh your NFT badges on your profile page</li>
+                              <li>Your address is only stored to read NFTs and is never shared with third parties</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end pt-2 space-x-2">
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        onClick={() => navigate("/profile")}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        className="bg-[#7C4DFF] hover:bg-[#651FFF]"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Saving..." : "Save Wallet Address"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
               </div>
             </TabsContent>
           </Tabs>

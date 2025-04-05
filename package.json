@@ -11,6 +11,7 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@alch/alchemy-sdk": "^1.1.1",
     "@hookform/resolvers": "^3.9.1",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@neondatabase/serverless": "^0.10.4",
@@ -46,6 +47,8 @@
     "@waku/interfaces": "^0.0.29",
     "@waku/message-encryption": "^0.0.32",
     "@waku/sdk": "^0.0.30",
+    "@web3modal/ethereum": "^2.7.1",
+    "@web3modal/wagmi": "^5.1.11",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -54,6 +57,7 @@
     "drizzle-orm": "^0.39.1",
     "drizzle-zod": "^0.7.0",
     "embla-carousel-react": "^8.3.0",
+    "ethers": "^6.13.5",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "framer-motion": "^11.13.1",
@@ -72,6 +76,8 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.0",
+    "viem": "^2.8.4",
+    "wagmi": "^2.5.7",
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
     "zod": "^3.23.8",

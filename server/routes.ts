@@ -220,6 +220,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Server error' });
     }
   });
+  
+  // Update NFT badges for a user
+  apiRouter.put('/users/:id/nftbadges', isAuthenticated, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Check if the user is updating their own profile
+      if (userId !== (req.user as any).id) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+      
+      const { nftBadges } = req.body;
+      
+      if (!Array.isArray(nftBadges)) {
+        return res.status(400).json({ message: 'Invalid NFT badges format' });
+      }
+      
+      // Update the user's NFT badges
+      const updatedUser = await storage.updateUser(userId, { nftBadges });
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Remove password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error updating NFT badges:', error);
+      res.status(500).json({ message: 'Server error updating NFT badges' });
+    }
+  });
 
   // FRIEND ROUTES
   apiRouter.get('/users/find/:friendCode', isAuthenticated, async (req, res) => {
