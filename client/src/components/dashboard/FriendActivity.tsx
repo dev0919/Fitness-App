@@ -47,7 +47,8 @@ export const FriendActivity = ({ activities }: FriendActivityProps) => {
   const [_, navigate] = useLocation();
   
   const handleGoToChat = (userId: number) => {
-    navigate(`/chat/${userId}`);
+    // Navigate directly to the friends page with chat ID to avoid redirect issues
+    navigate(`/friends/${userId}`);
   };
   
   const handleLike = useMutation({

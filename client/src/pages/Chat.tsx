@@ -7,10 +7,11 @@ export default function ChatPage() {
   const { id } = useParams();
   const [_, navigate] = useLocation();
   
-  // Redirect to the combined friends & chat page
+  // Redirect to the combined friends & chat page with chat tab active
   useEffect(() => {
     if (id) {
-      navigate(`/friends/${id}`);
+      // Navigate to the friends page which will select the chat tab automatically
+      navigate(`/friends?tab=chat&id=${id}`);
     } else {
       navigate('/friends');
     }

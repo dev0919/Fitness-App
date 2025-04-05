@@ -157,19 +157,40 @@ export default function FriendsAndChatPage() {
     navigate("/friend-requests");
   };
   
+  // Parse search parameters to handle redirects from Chat.tsx
+  const getSearchParams = () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    return {
+      tab: searchParams.get('tab') as 'friends' | 'chat' | null,
+      id: searchParams.get('id') ? parseInt(searchParams.get('id')!) : null
+    };
+  };
+  
   const handleGoToChat = (friendId: number) => {
-    navigate(`/chat/${friendId}`);
+    // Set the selected friend and switch to chat tab
+    setSelectedFriendId(friendId);
+    setActiveTab('chat');
+    // Update URL with the new pattern (but without navigating away)
+    window.history.pushState({}, '', `/friends?tab=chat&id=${friendId}`);
   };
 
   // Chat functionality
+  const searchParams = getSearchParams();
   const { id: chatIdParam } = useParams();
   const { user } = useAuth();
   const { messages, sendMessage, loadChatHistory, connected } = useWaku();
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [selectedFriendId, setSelectedFriendId] = useState<number | null>(chatIdParam ? parseInt(chatIdParam) : null);
-  const [activeTab, setActiveTab] = useState<'friends' | 'chat'>('friends');
+  
+  // Check both URL param sources (for backward compatibility)
+  const chatId = searchParams.id || (chatIdParam ? parseInt(chatIdParam) : null);
+  const [selectedFriendId, setSelectedFriendId] = useState<number | null>(chatId);
+  
+  // Set active tab based on search params or if chat ID is present
+  const [activeTab, setActiveTab] = useState<'friends' | 'chat'>(
+    searchParams.tab === 'chat' || chatIdParam ? 'chat' : 'friends'
+  );
   
   // Fetch friend data for chat
   const { data: selectedFriend, isLoading: isLoadingSelectedFriend } = useQuery({
@@ -208,10 +229,12 @@ export default function FriendsAndChatPage() {
     }
   };
   
-  // Select a chat 
+  // Select a chat and update URL
   const selectChat = (id: number) => {
     setSelectedFriendId(id);
     setActiveTab('chat');
+    // Update URL with the new pattern (but without navigating away)
+    window.history.pushState({}, '', `/friends?tab=chat&id=${id}`);
   };
   
   // Format timestamp to a readable time
