@@ -130,8 +130,9 @@ export const insertChallengeParticipantSchema = createInsertSchema(challengePart
 export const socialActivities = pgTable("social_activities", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
-  type: text("type").notNull(), // e.g., "workout_completed", "challenge_joined", "achievement_earned"
+  type: text("type").notNull(), // e.g., "workout_completed", "challenge_joined", "achievement_earned", "post"
   content: text("content").notNull(),
+  imageData: text("image_data"), // Base64 encoded image data
   relatedId: integer("related_id"), // e.g., workout id, challenge id
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -140,6 +141,7 @@ export const insertSocialActivitySchema = createInsertSchema(socialActivities).p
   userId: true,
   type: true,
   content: true,
+  imageData: true,
   relatedId: true,
 });
 

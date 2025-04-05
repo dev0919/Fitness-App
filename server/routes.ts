@@ -679,16 +679,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Not authenticated" });
       }
       
-      const { type, content } = req.body;
+      const { type, content, imageData } = req.body;
       
       if (!type || !content) {
         return res.status(400).json({ error: "Type and content are required" });
       }
       
+      // Create a new activity with optional image data
       const newActivity = await storage.createSocialActivity({
         userId,
         type,
-        content
+        content,
+        imageData: imageData || null  // Store image data if provided
       });
       
       res.status(201).json(newActivity);

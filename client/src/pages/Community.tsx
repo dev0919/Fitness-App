@@ -38,9 +38,11 @@ const Community = () => {
   const [commentText, setCommentText] = useState("");
   const [newPostText, setNewPostText] = useState("");
   const [showNewPostForm, setShowNewPostForm] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   
-  // Fetch friend activities
-  const { data: activities, isLoading } = useQuery({
+  // Fetch friend activities and user's own posts
+  const { data: activities, isLoading, refetch } = useQuery({
     queryKey: ['/api/social/activities/friends'],
   });
   
@@ -86,21 +88,65 @@ const Community = () => {
     }
   });
   
+  // Handle image selection
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      setSelectedImage(file);
+      
+      // Create a preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target && typeof e.target.result === 'string') {
+          setImagePreview(e.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  // Remove selected image
+  const removeSelectedImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+  };
+  
   // Create post mutation
   const createPost = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async () => {
+      // Convert image to base64 string if there's an image selected
+      let imageData = null;
+      if (selectedImage) {
+        const reader = new FileReader();
+        imageData = await new Promise<string>((resolve) => {
+          reader.onload = (e) => {
+            if (e.target && typeof e.target.result === 'string') {
+              resolve(e.target.result);
+            } else {
+              resolve('');
+            }
+          };
+          reader.readAsDataURL(selectedImage);
+        });
+      }
+      
       return await apiRequest("POST", "/api/social/activities", {
         type: "post",
-        content
+        content: newPostText,
+        imageData: imageData
       });
     },
     onSuccess: () => {
       setNewPostText("");
       setShowNewPostForm(false);
+      setSelectedImage(null);
+      setImagePreview(null);
       toast({
         title: "Success!",
         description: "Your post has been published",
       });
+      refetch(); // Explicitly refetch to show the new post
       queryClient.invalidateQueries({ queryKey: ["/api/social/activities/friends"] });
     },
     onError: () => {
@@ -205,20 +251,64 @@ const Community = () => {
                     placeholder="What's on your mind? Share your fitness achievements, goals, or tips..."
                     className="w-full p-3 border border-[#E0E0E0] rounded-md focus:outline-none focus:ring-1 focus:ring-[#4CAF50] min-h-[120px]"
                   />
-                  <div className="flex justify-end mt-3 space-x-2">
-                    <button
-                      onClick={() => setShowNewPostForm(false)}
-                      className="px-4 py-2 border border-[#E0E0E0] rounded-md text-[#616161]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => createPost.mutate(newPostText)}
-                      disabled={createPost.isPending || !newPostText.trim()}
-                      className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#388E3C] disabled:opacity-50"
-                    >
-                      {createPost.isPending ? 'Posting...' : 'Post'}
-                    </button>
+                  
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div className="mt-3 relative border border-[#E0E0E0] rounded-md overflow-hidden">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full max-h-60 object-cover"
+                      />
+                      <button 
+                        onClick={removeSelectedImage}
+                        className="absolute top-2 right-2 bg-gray-800 bg-opacity-70 text-white rounded-full p-1 hover:bg-opacity-100"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between mt-3">
+                    {/* Image Upload Button */}
+                    <div>
+                      <label htmlFor="image-upload" className="cursor-pointer flex items-center text-[#4CAF50] hover:text-[#388E3C]">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                        </svg>
+                        Add Photo
+                      </label>
+                      <input 
+                        type="file" 
+                        id="image-upload" 
+                        accept="image/*" 
+                        className="hidden"
+                        onChange={handleImageSelect}
+                      />
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          setShowNewPostForm(false);
+                          setSelectedImage(null);
+                          setImagePreview(null);
+                        }}
+                        className="px-4 py-2 border border-[#E0E0E0] rounded-md text-[#616161]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => createPost.mutate()}
+                        disabled={createPost.isPending || (!newPostText.trim() && !selectedImage)}
+                        className="px-4 py-2 bg-[#4CAF50] text-white rounded-md hover:bg-[#388E3C] disabled:opacity-50"
+                      >
+                        {createPost.isPending ? 'Posting...' : 'Post'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -258,6 +348,17 @@ const Community = () => {
                       <p className="text-sm text-[#616161] mt-1">
                         {activity.content}
                       </p>
+                      
+                      {/* Display image if available */}
+                      {activity.imageData && (
+                        <div className="mt-3 border border-[#E0E0E0] rounded-md overflow-hidden">
+                          <img 
+                            src={activity.imageData} 
+                            alt="Post attachment" 
+                            className="w-full max-h-96 object-contain"
+                          />
+                        </div>
+                      )}
                       
                       <div className="mt-3 flex items-center">
                         <button 
