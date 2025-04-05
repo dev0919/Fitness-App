@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,6 +45,9 @@ type PasswordFormValues = z.infer<typeof passwordSchema>;
 const Settings = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<'profile' | 'account' | 'notifications' | 'privacy'>('profile');
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { logoutMutation } = useAuth();
   const [_, navigate] = useLocation();
   
@@ -147,7 +150,12 @@ const Settings = () => {
   
   // Handle profile form submission
   const onProfileSubmit = (data: ProfileFormValues) => {
-    updateProfile.mutate(data);
+    updateProfile.mutate(data, {
+      onSuccess: () => {
+        setIsEditing(false);
+        setSelectedFile(null);
+      }
+    });
   };
   
   // Handle password form submission
@@ -283,18 +291,85 @@ const Settings = () => {
                 <div className="p-6">
                   <div className="sm:flex sm:items-center sm:justify-between">
                     <div className="sm:flex sm:space-x-5">
-                      <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 relative">
                         <img 
                           className="mx-auto h-20 w-20 rounded-full object-cover" 
-                          src={user?.profileImage || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName || ''}&background=random`} 
+                          src={selectedFile ? URL.createObjectURL(selectedFile) : (user?.profileImage || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName || ''}&background=random`)} 
                           alt={`${user?.firstName} ${user?.lastName || ''}`}
                         />
+                        {isEditing && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div 
+                              onClick={() => fileInputRef.current?.click()}
+                              className="bg-black bg-opacity-50 rounded-full h-20 w-20 flex items-center justify-center cursor-pointer"
+                            >
+                              <i className="fas fa-camera text-white text-xl"></i>
+                              <input 
+                                type="file" 
+                                className="hidden" 
+                                ref={fileInputRef}
+                                accept="image/*"
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    setSelectedFile(e.target.files[0]);
+
+                                    // Update form value with image URL when file is selected
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                      if (event.target?.result) {
+                                        profileForm.setValue('profileImage', event.target.result as string);
+                                      }
+                                    };
+                                    reader.readAsDataURL(e.target.files[0]);
+                                  }
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="mt-4 text-center sm:mt-0 sm:pt-1 sm:text-left">
                         <p className="text-xl font-bold text-[#212121]">{user?.firstName} {user?.lastName}</p>
                         <p className="text-sm text-[#616161]">@{user?.username}</p>
                         <p className="text-sm text-[#9E9E9E] mt-1">{user?.email}</p>
                       </div>
+                    </div>
+                    <div>
+                      {!isEditing ? (
+                        <Button
+                          onClick={() => setIsEditing(true)}
+                          className="bg-[#4CAF50] hover:bg-[#388E3C] text-white"
+                        >
+                          <i className="fas fa-edit mr-2"></i>
+                          Update Profile
+                        </Button>
+                      ) : (
+                        <div className="space-x-2">
+                          <Button
+                            onClick={() => {
+                              setIsEditing(false);
+                              setSelectedFile(null);
+                              // Reset form to current user values
+                              profileForm.reset({
+                                firstName: user?.firstName || "",
+                                lastName: user?.lastName || "",
+                                email: user?.email || "",
+                                profileImage: user?.profileImage || "",
+                              });
+                            }}
+                            variant="outline"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={profileForm.handleSubmit(onProfileSubmit)}
+                            className="bg-[#4CAF50] hover:bg-[#388E3C] text-white"
+                            disabled={updateProfile.isPending}
+                          >
+                            {updateProfile.isPending ? "Saving..." : "Save Changes"}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -393,17 +468,56 @@ const Settings = () => {
             <div className="space-y-6">
               {/* Profile Information */}
               <div className="bg-white shadow rounded-lg overflow-hidden">
-                <div className="px-4 py-5 sm:px-6 border-b border-[#E0E0E0]">
-                  <h3 className="text-lg leading-6 font-medium text-[#212121]">
-                    Profile Information
-                  </h3>
-                  <p className="mt-1 text-sm text-[#616161]">
-                    Update your basic profile details
-                  </p>
+                <div className="px-4 py-5 sm:px-6 border-b border-[#E0E0E0] flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg leading-6 font-medium text-[#212121]">
+                      Profile Information
+                    </h3>
+                    <p className="mt-1 text-sm text-[#616161]">
+                      Update your basic profile details
+                    </p>
+                  </div>
+                  <div>
+                    {!isEditing ? (
+                      <Button
+                        onClick={() => setIsEditing(true)}
+                        className="bg-[#4CAF50] hover:bg-[#388E3C] text-white"
+                      >
+                        <i className="fas fa-edit mr-2"></i>
+                        Edit Profile
+                      </Button>
+                    ) : (
+                      <div className="space-x-2">
+                        <Button
+                          onClick={() => {
+                            setIsEditing(false);
+                            setSelectedFile(null);
+                            // Reset form to current user values
+                            profileForm.reset({
+                              firstName: user?.firstName || "",
+                              lastName: user?.lastName || "",
+                              email: user?.email || "",
+                              profileImage: user?.profileImage || "",
+                            });
+                          }}
+                          variant="outline"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={profileForm.handleSubmit(onProfileSubmit)}
+                          className="bg-[#4CAF50] hover:bg-[#388E3C] text-white"
+                          disabled={updateProfile.isPending}
+                        >
+                          {updateProfile.isPending ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="px-4 py-5 sm:p-6">
                   <Form {...profileForm}>
-                    <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+                    <form className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <FormField
                           control={profileForm.control}
@@ -412,7 +526,12 @@ const Settings = () => {
                             <FormItem>
                               <FormLabel>First Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="First name" {...field} />
+                                <Input 
+                                  placeholder="First name" 
+                                  {...field} 
+                                  disabled={!isEditing}
+                                  className={!isEditing ? "bg-gray-50" : ""}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -426,7 +545,12 @@ const Settings = () => {
                             <FormItem>
                               <FormLabel>Last Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="Last name" {...field} />
+                                <Input 
+                                  placeholder="Last name" 
+                                  {...field} 
+                                  disabled={!isEditing}
+                                  className={!isEditing ? "bg-gray-50" : ""}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -441,36 +565,62 @@ const Settings = () => {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input placeholder="Email address" {...field} />
+                              <Input 
+                                placeholder="Email address" 
+                                {...field} 
+                                disabled={!isEditing}
+                                className={!isEditing ? "bg-gray-50" : ""}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       
-                      <FormField
-                        control={profileForm.control}
-                        name="profileImage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Profile Image URL</FormLabel>
-                            <FormControl>
-                              <Input placeholder="URL to your profile image" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="pt-2">
-                        <Button 
-                          type="submit" 
-                          className="bg-[#4CAF50] hover:bg-[#388E3C]"
-                          disabled={updateProfile.isPending}
-                        >
-                          {updateProfile.isPending ? "Updating..." : "Update Profile"}
-                        </Button>
-                      </div>
+                      {isEditing && (
+                        <div className="flex items-center gap-4 mt-4">
+                          <div className="flex-shrink-0">
+                            <img 
+                              className="h-16 w-16 rounded-full object-cover border-2 border-[#4CAF50]" 
+                              src={selectedFile ? URL.createObjectURL(selectedFile) : (user?.profileImage || `https://ui-avatars.com/api/?name=${user?.firstName}+${user?.lastName || ''}&background=random`)} 
+                              alt={`${user?.firstName} ${user?.lastName || ''}`}
+                            />
+                          </div>
+                          <div>
+                            <Button 
+                              type="button" 
+                              variant="outline"
+                              onClick={() => fileInputRef.current?.click()}
+                            >
+                              <i className="fas fa-camera mr-2"></i>
+                              Upload Photo
+                            </Button>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Max file size: 5MB. JPG, PNG or GIF.
+                            </p>
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              ref={fileInputRef}
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  setSelectedFile(e.target.files[0]);
+                                  
+                                  // Update form value with image URL when file is selected
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    if (event.target?.result) {
+                                      profileForm.setValue('profileImage', event.target.result as string);
+                                    }
+                                  };
+                                  reader.readAsDataURL(e.target.files[0]);
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </form>
                   </Form>
                 </div>
