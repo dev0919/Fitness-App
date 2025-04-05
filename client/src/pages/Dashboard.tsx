@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
 import { StatsCard, StreakCard } from "@/components/dashboard/StatsCard";
@@ -8,11 +8,19 @@ import { FriendActivity } from "@/components/dashboard/FriendActivity";
 import { UpcomingChallenges } from "@/components/dashboard/UpcomingChallenges";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { apiRequest } from "@/lib/queryClient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { 
   PlusCircle, 
   BarChart3, 
   RefreshCcw,
-  Bell
+  Bell,
+  Settings
 } from "lucide-react";
 import { 
   Sheet,
@@ -21,7 +29,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetClose
+  SheetClose,
+  SheetFooter
 } from "@/components/ui/sheet";
 
 const Dashboard = () => {
@@ -221,10 +230,66 @@ const Dashboard = () => {
     }));
   };
 
+  // Form schema for goal settings
+  const GoalSettingsSchema = z.object({
+    dailyStepGoal: z.coerce.number().min(1000, "Step goal must be at least 1,000").max(100000, "Step goal cannot exceed 100,000"),
+    dailyCalorieGoal: z.coerce.number().min(100, "Calorie goal must be at least 100").max(5000, "Calorie goal cannot exceed 5,000")
+  });
+
+  // Settings form
+  const goalSettingsForm = useForm<z.infer<typeof GoalSettingsSchema>>({
+    resolver: zodResolver(GoalSettingsSchema),
+    defaultValues: {
+      dailyStepGoal: userData?.dailyStepGoal || 10000,
+      dailyCalorieGoal: userData?.dailyCalorieGoal || 500
+    }
+  });
+
+  // Update goal settings when userData changes
+  useEffect(() => {
+    if (userData) {
+      goalSettingsForm.reset({
+        dailyStepGoal: userData.dailyStepGoal || 10000,
+        dailyCalorieGoal: userData.dailyCalorieGoal || 500
+      });
+    }
+  }, [userData]);
+
+  // Goal settings mutation
+  const updateGoalsMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof GoalSettingsSchema>) => {
+      return apiRequest(`/api/users/${userData?.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data)
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Goals updated",
+        description: "Your fitness goals have been updated successfully.",
+        variant: "success",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/me'] });
+      addNotification("Fitness goals updated", "goal");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update goals. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handle goal settings form submission
+  const onSubmitGoalSettings = (data: z.infer<typeof GoalSettingsSchema>) => {
+    updateGoalsMutation.mutate(data);
+  };
+
   // Calculate progress percentages
   const calculateStepProgress = () => {
     const steps = dashboardData?.stats.steps || 0;
-    const goal = 10000; // Daily step goal
+    const goal = userData?.dailyStepGoal || 10000; // Use user's custom goal or default
     const percentage = Math.min(Math.round((steps / goal) * 100), 100);
     return {
       percentage,
@@ -234,7 +299,7 @@ const Dashboard = () => {
   
   const calculateCalorieProgress = () => {
     const calories = dashboardData?.stats.calories || 0;
-    const goal = 500; // Daily calorie burn goal
+    const goal = userData?.dailyCalorieGoal || 500; // Use user's custom goal or default
     const percentage = Math.min(Math.round((calories / goal) * 100), 100);
     return {
       percentage,
@@ -309,6 +374,89 @@ const Dashboard = () => {
             Refresh
           </button>
           
+          {/* Goal Settings Sheet */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50]">
+                <Settings className="w-4 h-4 mr-1" />
+                Goals
+              </button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Fitness Goals</SheetTitle>
+                <SheetDescription>
+                  Customize your daily fitness goals
+                </SheetDescription>
+              </SheetHeader>
+              
+              <div className="py-6">
+                <Form {...goalSettingsForm}>
+                  <form onSubmit={goalSettingsForm.handleSubmit(onSubmitGoalSettings)} className="space-y-6">
+                    <FormField
+                      control={goalSettingsForm.control}
+                      name="dailyStepGoal"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Daily Step Goal</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="10000" 
+                              {...field} 
+                              min="1000"
+                              max="100000"
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <p className="text-sm text-muted-foreground">
+                            Recommended: 7,000-10,000 steps per day
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={goalSettingsForm.control}
+                      name="dailyCalorieGoal"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Daily Calorie Burn Goal</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              placeholder="500" 
+                              {...field}
+                              min="100"
+                              max="5000"
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <p className="text-sm text-muted-foreground">
+                            Recommended: 400-600 calories from exercise
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <SheetFooter>
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={updateGoalsMutation.isPending || !goalSettingsForm.formState.isDirty}
+                      >
+                        {updateGoalsMutation.isPending ? 'Saving...' : 'Save Goals'}
+                      </Button>
+                    </SheetFooter>
+                  </form>
+                </Form>
+              </div>
+            </SheetContent>
+          </Sheet>
+          
+          {/* Notifications Sheet */}
           <Sheet>
             <SheetTrigger asChild>
               <button className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#4CAF50] relative">
@@ -344,6 +492,8 @@ const Dashboard = () => {
                           ? 'bg-purple-50 border-purple-200'
                           : notification.type === 'friend'
                           ? 'bg-blue-50 border-blue-200'
+                          : notification.type === 'goal'
+                          ? 'bg-green-50 border-green-200'
                           : 'bg-gray-50 border-gray-200'
                       }`}
                     >

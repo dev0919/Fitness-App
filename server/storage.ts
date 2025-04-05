@@ -462,7 +462,11 @@ export class MemStorage implements IStorage {
       lastName: user.lastName || null,
       profileImage: user.profileImage || null,
       friendCode,
-      friends
+      friends,
+      walletAddress: user.walletAddress || null,
+      nftBadges: user.nftBadges || [],
+      dailyStepGoal: user.dailyStepGoal || 10000,
+      dailyCalorieGoal: user.dailyCalorieGoal || 500
     };
     
     this.users.set(id, newUser);
@@ -561,7 +565,10 @@ export class MemStorage implements IStorage {
       // Ensure these fields are of the correct type
       lastName: userData.lastName !== undefined ? userData.lastName : existingUser.lastName,
       profileImage: userData.profileImage !== undefined ? userData.profileImage : existingUser.profileImage,
-      friendCode: userData.friendCode !== undefined ? userData.friendCode : existingUser.friendCode
+      friendCode: userData.friendCode !== undefined ? userData.friendCode : existingUser.friendCode,
+      // Handle the new daily goal fields
+      dailyStepGoal: userData.dailyStepGoal !== undefined ? userData.dailyStepGoal : (existingUser.dailyStepGoal || 10000),
+      dailyCalorieGoal: userData.dailyCalorieGoal !== undefined ? userData.dailyCalorieGoal : (existingUser.dailyCalorieGoal || 500)
     };
     
     this.users.set(id, updatedUser);

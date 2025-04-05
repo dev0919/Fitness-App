@@ -26,6 +26,8 @@ export const users = pgTable("users", {
   friends: json("friends").$type<number[]>().default([]),
   walletAddress: varchar("wallet_address", { length: 42 }),
   nftBadges: json("nft_badges").$type<NFTBadge[]>().default([]),
+  dailyStepGoal: integer("daily_step_goal").default(10000),
+  dailyCalorieGoal: integer("daily_calorie_goal").default(500),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -39,6 +41,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   friends: true,
   walletAddress: true,
   nftBadges: true,
+  dailyStepGoal: true,
+  dailyCalorieGoal: true,
 });
 
 // Workout schema
