@@ -148,6 +148,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const user = await storage.createUser(userData);
+      
+      // Initialize empty data for the new user
+      try {
+        // Create initial token wallet for the new user
+        await storage.createTokenWallet({
+          userId: user.id,
+          balance: "100", // Initial welcome bonus
+          walletAddress: null
+        });
+        
+        // Add signup bonus transaction
+        await storage.createTokenTransaction({
+          userId: user.id,
+          amount: "100",
+          type: "signup_bonus",
+          relatedId: null,
+          status: "completed",
+          txHash: null,
+          description: "Welcome bonus for joining FitConnect"
+        });
+        
+        console.log(`Initialized basic data for new user: ${user.username} (ID: ${user.id})`);
+      } catch (initError) {
+        console.error('Error initializing user data:', initError);
+        // Continue with login even if initialization failed
+      }
+      
       // Remove password from response
       const { password, ...userWithoutPassword } = user;
       
