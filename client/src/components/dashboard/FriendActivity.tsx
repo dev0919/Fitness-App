@@ -128,11 +128,17 @@ export const FriendActivity = ({ activities }: FriendActivityProps) => {
                   <div className="flex-shrink-0">
                     <Link href={`/profile/${user.id}`}>
                       <div className="cursor-pointer">
-                        <img 
-                          className="h-10 w-10 rounded-full object-cover" 
-                          src={user.profileImage || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName || ''}&background=random`} 
-                          alt={`${user.firstName} ${user.lastName || ''}`}
-                        />
+                        {user.profileImage ? (
+                          <img 
+                            className="h-10 w-10 rounded-full object-cover" 
+                            src={user.profileImage} 
+                            alt={`${user.firstName} ${user.lastName || ''}`}
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-[#4CAF50] text-white flex items-center justify-center text-sm font-medium">
+                            {user.firstName.charAt(0)}{user.lastName ? user.lastName.charAt(0) : ''}
+                          </div>
+                        )}
                       </div>
                     </Link>
                   </div>

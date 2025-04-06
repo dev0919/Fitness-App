@@ -6,14 +6,7 @@ import { SocialActivity } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 
-// Mock friend data (would come from API in a real app)
-const MOCK_FRIENDS = [
-  { id: 1, name: "Sarah Williams", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&h=80" },
-  { id: 2, name: "Michael Chen", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=80&h=80" },
-  { id: 3, name: "Jessica Lee", avatar: "https://images.unsplash.com/photo-1550525811-e5869dd03032?auto=format&fit=crop&w=80&h=80" },
-  { id: 4, name: "David Kim", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&h=80" },
-  { id: 5, name: "Emma Johnson", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=80&h=80" },
-];
+// We'll use real friends data from the API
 
 // Helper function for formatting time
 const formatTime = (dateString: string) => {
@@ -228,7 +221,14 @@ const Community = () => {
     retry: false,
     refetchOnWindowFocus: false
   });
-
+  
+  // Get user's friends
+  const { data: friendsData } = useQuery({
+    queryKey: ['/api/friends'],
+    retry: false,
+    refetchOnWindowFocus: false
+  });
+  
   // Activities already have user data from the backend
   const enhancedActivities = activities || [];
   
@@ -373,11 +373,17 @@ const Community = () => {
                   <div className="flex">
                     <div className="flex-shrink-0">
                       <Link href={`/profile/${user.id}`}>
-                        <img 
-                          className="h-10 w-10 rounded-full object-cover cursor-pointer" 
-                          src={user.profileImage || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName || ''}&background=random`} 
-                          alt={`${user.firstName} ${user.lastName || ''}`}
-                        />
+                        {user.profileImage ? (
+                          <img 
+                            className="h-10 w-10 rounded-full object-cover cursor-pointer" 
+                            src={user.profileImage}
+                            alt={`${user.firstName} ${user.lastName || ''}`}
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-[#4CAF50] text-white flex items-center justify-center text-sm font-medium cursor-pointer">
+                            {user.firstName.charAt(0)}{user.lastName ? user.lastName.charAt(0) : ''}
+                          </div>
+                        )}
                       </Link>
                     </div>
                     <div className="ml-3 flex-1">
@@ -476,26 +482,38 @@ const Community = () => {
           </div>
           
           <ul className="divide-y divide-[#E0E0E0]">
-            {MOCK_FRIENDS.map((friend) => (
-              <li key={friend.id} className="p-4 hover:bg-[#F5F5F5]">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <img 
-                      className="h-10 w-10 rounded-full object-cover" 
-                      src={friend.avatar} 
-                      alt={friend.name}
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-[#212121]">{friend.name}</p>
-                      <p className="text-xs text-[#9E9E9E]">Active today</p>
+            {friendsData && friendsData.length > 0 ? (
+              friendsData.map((friend) => (
+                <li key={friend.id} className="p-4 hover:bg-[#F5F5F5]">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {friend.profileImage ? (
+                        <img 
+                          className="h-10 w-10 rounded-full object-cover" 
+                          src={friend.profileImage}
+                          alt={`${friend.firstName} ${friend.lastName || ''}`}
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-[#4CAF50] text-white flex items-center justify-center text-sm font-medium">
+                          {friend.firstName.charAt(0)}{friend.lastName ? friend.lastName.charAt(0) : ''}
+                        </div>
+                      )}
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-[#212121]">{friend.firstName} {friend.lastName || ''}</p>
+                        <p className="text-xs text-[#9E9E9E]">@{friend.username}</p>
+                      </div>
                     </div>
+                    <Link href={`/profile/${friend.id}`}>
+                      <span className="text-sm text-[#4CAF50] hover:text-[#388E3C] cursor-pointer">View Profile</span>
+                    </Link>
                   </div>
-                  <Link href={`/profile/${friend.id}`}>
-                    <span className="text-sm text-[#4CAF50] hover:text-[#388E3C] cursor-pointer">View Profile</span>
-                  </Link>
-                </div>
+                </li>
+              ))
+            ) : (
+              <li className="p-6 text-center text-[#9E9E9E]">
+                No friends found. Add friends to see them here!
               </li>
-            ))}
+            )}
           </ul>
           
           <div className="p-4 border-t border-[#E0E0E0] text-center">
