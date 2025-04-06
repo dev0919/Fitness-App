@@ -229,25 +229,8 @@ const Community = () => {
     refetchOnWindowFocus: false
   });
 
-  // Enhancing activities with user data
-  const enhancedActivities = activities ? 
-    activities.map((activity: SocialActivity) => {
-      // For each activity, use the current user's data
-      // (In a real app with multiple users, this would fetch actual user data from the server)
-      return {
-        activity,
-        user: {
-          id: activity.userId,
-          name: currentUser?.username || "User",
-          avatar: `/avatars/avatar${activity.userId % 8 + 1}.png` // Use a deterministic avatar based on user ID
-        },
-        interactions: {
-          likes: activity.likeCount || 0,
-          likedByCurrentUser: false,
-          comments: activity.commentCount || 0
-        }
-      };
-    }) : [];
+  // Activities already have user data from the backend
+  const enhancedActivities = activities || [];
   
   if (isLoading) {
     return (
@@ -392,15 +375,15 @@ const Community = () => {
                       <Link href={`/profile/${user.id}`}>
                         <img 
                           className="h-10 w-10 rounded-full object-cover cursor-pointer" 
-                          src={user.avatar} 
-                          alt={user.name}
+                          src={user.profileImage || `https://ui-avatars.com/api/?name=${user.firstName}+${user.lastName || ''}&background=random`} 
+                          alt={`${user.firstName} ${user.lastName || ''}`}
                         />
                       </Link>
                     </div>
                     <div className="ml-3 flex-1">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-[#212121]">
-                          {user.name}
+                          {user.firstName} {user.lastName || ''}
                         </p>
                         <p className="text-xs text-[#9E9E9E]">
                           {formatTime(activity.createdAt)}

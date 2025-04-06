@@ -834,7 +834,7 @@ export class MemStorage implements IStorage {
     };
     this.friendRequests.set(id, updatedRequest);
     
-    // If the request was accepted, add users as friends and create social activities
+    // If the request was accepted, add users as friends and create a single social activity
     if (status === "accepted") {
       await this.addFriend(request.senderId, request.receiverId);
       
@@ -843,15 +843,8 @@ export class MemStorage implements IStorage {
       const receiver = await this.getUser(request.receiverId);
       
       if (sender && receiver) {
-        // Create social activity for the sender (user who sent the request)
-        await this.createSocialActivity({
-          userId: request.senderId,
-          type: "friend",
-          content: `Connected with ${receiver.firstName} ${receiver.lastName || ''}`,
-          imageData: null
-        });
-        
-        // Create social activity for the receiver (user who accepted the request)
+        // Create only one social activity for the connection event
+        // We'll create it for the receiver (user who accepted the request)
         await this.createSocialActivity({
           userId: request.receiverId,
           type: "friend",
