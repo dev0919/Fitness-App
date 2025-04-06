@@ -121,7 +121,7 @@ export const FriendActivity = ({ activities }: FriendActivityProps) => {
       </div>
       <div className="bg-white">
         <ul className="divide-y divide-[#E0E0E0]">
-          {activities.length > 0 ? (
+          {activities && activities.length > 0 ? (
             activities.map(({ activity, user, interactions }) => (
               <li key={activity.id} className="px-4 py-4 sm:px-6 hover:bg-[#F5F5F5]">
                 <div className="flex">
@@ -138,11 +138,23 @@ export const FriendActivity = ({ activities }: FriendActivityProps) => {
                   </div>
                   <div className="ml-3 flex-1">
                     <p className="text-sm font-medium text-[#212121]">
-                      {user.firstName} {user.lastName}
+                      {user.firstName} {user.lastName || ''}
                     </p>
                     <p className="text-sm text-[#616161]">
                       {activity.content} <span className="text-[#9E9E9E]">• {formatActivityTime(new Date(activity.createdAt))}</span>
                     </p>
+                    
+                    {/* Show activity image if present */}
+                    {activity.imageData && (
+                      <div className="mt-2 rounded-md overflow-hidden max-h-48">
+                        <img 
+                          src={activity.imageData} 
+                          alt="Activity" 
+                          className="w-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
                     <div className="mt-2 flex items-center">
                       <button 
                         onClick={() => handleLike.mutate(activity.id)}

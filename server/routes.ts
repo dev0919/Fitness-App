@@ -773,7 +773,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the count of activities found
       console.log(`Found ${activities.length} social activities for user ID ${userId} and friends`);
       
-      res.json(activities);
+      // Enhance activities with user information and interactions
+      const enhancedActivities = await Promise.all(activities.map(async (activity) => {
+        // Get user information
+        const activityUser = await storage.getUser(activity.userId);
+        
+        if (!activityUser) {
+          console.warn(`User not found for activity ${activity.id} (userId: ${activity.userId})`);
+          return null; // Filter this out later
+        }
+        
+        // Get interactions for this activity
+        const interactions = await storage.getSocialInteractionsByActivityId(activity.id);
+        const likes = interactions.filter(i => i.type === 'like').length;
+        const likedByCurrentUser = interactions.some(i => i.type === 'like' && i.userId === userId);
+        const comments = interactions.filter(i => i.type === 'comment').length;
+        
+        // Destructure to prevent sensitive information being sent
+        const { password, email, nftBadges, ...safeUser } = activityUser;
+        
+        return {
+          activity,
+          user: {
+            ...safeUser,
+            firstName: safeUser.firstName || '',
+            lastName: safeUser.lastName || '',
+            profileImage: safeUser.profileImage || null
+          },
+          interactions: {
+            likes,
+            likedByCurrentUser,
+            comments
+          }
+        };
+      }));
+      
+      // Filter out null values (activities with missing users)
+      const validActivities = enhancedActivities.filter(item => item !== null);
+      
+      console.log(`Returning ${validActivities.length} enhanced activities`);
+      
+      res.json(validActivities);
     } catch (error) {
       console.error("Error fetching friend activities:", error);
       res.status(500).json({ message: 'Server error' });

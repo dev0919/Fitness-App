@@ -203,21 +203,8 @@ const Dashboard = () => {
   const prepareFriendActivities = () => {
     if (!friendActivitiesData) return [];
     
-    return friendActivitiesData.map((activity: any) => ({
-      activity,
-      user: {
-        id: activity.userId || 1,
-        username: activity.username || 'user1',
-        firstName: activity.firstName || 'Sarah',
-        lastName: activity.lastName || 'Williams',
-        profileImage: activity.profileImage || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&h=80'
-      },
-      interactions: {
-        likes: activity.likes || 0,
-        likedByCurrentUser: activity.likedByCurrentUser || false,
-        comments: activity.comments || 0
-      }
-    }));
+    // The data is already structured properly from the backend
+    return friendActivitiesData;
   };
 
   // Prepare challenges data
