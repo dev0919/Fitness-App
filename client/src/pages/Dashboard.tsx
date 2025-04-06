@@ -307,7 +307,7 @@ const Dashboard = () => {
     const percentage = Math.min(Math.round((workouts / goal) * 100), 100);
     return {
       percentage,
-      goalText: `${workouts} of ${goal} weekly goal`
+      goalText: `${percentage}% of weekly goal`
     };
   };
 

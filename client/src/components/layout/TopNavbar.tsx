@@ -123,11 +123,17 @@ export const TopNavbar = () => {
             {user && (
               <Link href="/settings">
                 <div className="flex items-center cursor-pointer">
-                  <img 
-                    src={user.profileImage || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80"} 
-                    alt="User avatar" 
-                    className="w-8 h-8 rounded-full object-cover hover:ring-2 hover:ring-[#4CAF50]" 
-                  />
+                  {user.profileImage ? (
+                    <img 
+                      src={user.profileImage} 
+                      alt={`${user.firstName} ${user.lastName || ''}`} 
+                      className="w-8 h-8 rounded-full object-cover hover:ring-2 hover:ring-[#4CAF50]" 
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[#4CAF50] text-white flex items-center justify-center text-sm font-medium hover:ring-2 hover:ring-[#4CAF50] hover:bg-[#388E3C]">
+                      {user.firstName.charAt(0)}{user.lastName ? user.lastName.charAt(0) : ''}
+                    </div>
+                  )}
                 </div>
               </Link>
             )}
@@ -209,11 +215,17 @@ export const TopNavbar = () => {
             {user && (
               <div className="flex items-center px-4">
                 <div className="flex-shrink-0">
-                  <img
-                    className="h-10 w-10 rounded-full object-cover"
-                    src={user.profileImage || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80"}
-                    alt={`${user.firstName} ${user.lastName || ''}`}
-                  />
+                  {user.profileImage ? (
+                    <img
+                      className="h-10 w-10 rounded-full object-cover"
+                      src={user.profileImage}
+                      alt={`${user.firstName} ${user.lastName || ''}`}
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-[#4CAF50] text-white flex items-center justify-center text-sm font-medium">
+                      {user.firstName.charAt(0)}{user.lastName ? user.lastName.charAt(0) : ''}
+                    </div>
+                  )}
                 </div>
                 <div className="ml-3">
                   <div className="text-base font-medium text-[#212121]">{`${user.firstName} ${user.lastName || ''}`}</div>
